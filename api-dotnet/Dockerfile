@@ -1,33 +1,39 @@
 # Stage 1: Base Image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 5000
-
-ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:80
 
 # Stage 2: Build Image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# Copy everything and restore solution
-COPY . .
+# Copy solution and project files
+COPY Hng.Csharp.Web.sln ./
+COPY src/Domain/Domain.csproj src/Domain/
+COPY src/Application/Application.csproj src/Application/
+COPY src/Infrastructure/Infrastructure.csproj src/Infrastructure/
+COPY src/Web/Web.csproj src/Web/
+
+# Restore dependencies
 RUN dotnet restore Hng.Csharp.Web.sln
 
-# Build
-WORKDIR /src/Hng.Web
-RUN dotnet build Hng.Web.csproj -c Release -o /app/build
+# Copy the remaining source code
+COPY src/Domain/ src/Domain/
+COPY src/Application/ src/Application/
+COPY src/Infrastructure/ src/Infrastructure/
+COPY src/Web/ src/Web/
+
+# Build the Web project
+WORKDIR /src/src/Web
+RUN dotnet build Web.csproj -c Release -o /app/build
 
 # Stage 3: Publish Image
 FROM build AS publish
-RUN dotnet publish Hng.Web.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish Web.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 4: Final Image
 FROM base AS final
 WORKDIR /app
-
-# Copy the published output from the publish stage
 COPY --from=publish /app/publish .
-# Copy the EmailTemplates folder
-COPY src/Hng.Infrastructure/EmailTemplates /app/EmailTemplates
-
-# Command to run the application
-ENTRYPOINT ["dotnet", "Hng.Web.dll"]
+ENTRYPOINT ["dotnet", "Web.dll"]

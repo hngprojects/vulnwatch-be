@@ -1,42 +1,43 @@
-# Stage 1
-# Use a base image with Maven and JDK 17
-FROM maven:3.8.1-openjdk-17 AS stage1
-# Speed up Maven JVM a bit
+# syntax=docker/dockerfile:1.6
+
+########################
+# Stage 1 - Build
+########################
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+
 ENV MAVEN_OPTS="-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 
-# Set working directory
 WORKDIR /app
-# Copy just pom.xml
+
+# Copy only what is needed for dependency resolution
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 
-# Go-offline using the pom.xml
-RUN mvn dependency:go-offline
+# Cache Maven dependencies (THIS is the big win)
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -q dependency:go-offline
 
-# Copy your other files
-COPY ./src ./src
-# Compile the source code and package it in a jar file
-RUN mvn package -Dmaven.test.skip=true
+# Now copy source
+COPY src ./src
 
-# Stage 2
-# Use a base image with Eclipse Temurin JRE 17
-FROM eclipse-temurin:17-jre-alpine
-# Set deployment directory
+# Build with cache again
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -q package -DskipTests
+
+########################
+# Stage 2 - Runtime
+########################
+FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
-# Copy over the built artifact from the maven image
-COPY --from=stage1 /app/target/*.jar app.jar
 
-# Create a non-root user and group
+COPY --from=build /app/target/*.jar app.jar
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Change ownership of the application files to the non-root user
 RUN chown -R appuser:appgroup /app
 
-# Switch to the non-root user
 USER appuser
 
-# Expose the application port
 EXPOSE 8080
 
-# Run the application
 CMD ["java", "-jar", "app.jar"]

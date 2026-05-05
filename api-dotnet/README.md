@@ -170,7 +170,7 @@ dotnet run
 
 ### 4. Verify the Setup
 
-Depending on the IDE/code editor, you should be greeted with the Swagger documentation page else navigate to `/swagger` to view the documentation
+Depending on the IDE/code editor, you should be greeted with the Swagger documentation page else navigate to `/docs` to view the documentation
 
 ## Database Connection
 Update your appsettings.development file with details of your postgress connection
