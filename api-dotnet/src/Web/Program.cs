@@ -1,23 +1,47 @@
 using Application.Interfaces;
+using Application.Features.Scans;
 using Infrastructure.Redis;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // MediatR
 builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(Application.Features.Scans.CreateScanCommand).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CreateScanCommand).Assembly);
 });
 
 // Redis
 var redisConfig = builder.Configuration.GetValue<string>("Redis:Configuration") ?? "localhost:6379";
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfig));
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = ConfigurationOptions.Parse(redisConfig);
+    config.AbortOnConnectFail = false; // Prevent exceptions on startup if Redis is unavailable
+    return ConnectionMultiplexer.Connect(config);
+});
+
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
+builder.Services.AddHealthChecks()
+    .AddRedis(redisConfig, "redis");
+
 
 var app = builder.Build();
 
@@ -29,6 +53,19 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "docs";
 });
 
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
+
 app.MapControllers();
+
+app.MapHealthChecks("/health");
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    app.Logger.LogInformation("Application has started.");
+});
 
 app.Run();
