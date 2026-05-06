@@ -36,6 +36,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 });
 
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks()
     .AddRedis(redisConfig, "redis");
