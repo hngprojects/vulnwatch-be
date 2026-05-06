@@ -31,13 +31,14 @@ var redisConfig = builder.Configuration.GetValue<string>("Redis:Configuration") 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var config = ConfigurationOptions.Parse(redisConfig);
-    //config.AbortOnConnectFail = false; // Prevent exceptions on startup if Redis is unavailable
+    config.AbortOnConnectFail = false; // Prevent exceptions on startup if Redis is unavailable
     return ConnectionMultiplexer.Connect(config);
 });
 
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddRedis(redisConfig, "redis");
 
 
 var app = builder.Build();

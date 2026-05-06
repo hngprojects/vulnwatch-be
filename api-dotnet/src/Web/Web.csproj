@@ -6,6 +6,7 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.20" />
