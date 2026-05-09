@@ -60,5 +60,10 @@ public class User : IdentityUser<Guid>
         return true;
     }
 
+    public void Activate()
+    {
+        Touch();
+    }
+
     private void Touch() => UpdatedAt = DateTime.UtcNow;
 }
