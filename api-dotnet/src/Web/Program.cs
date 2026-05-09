@@ -14,6 +14,8 @@ using StackExchange.Redis;
 using System.Text;
 using System.Text.Json.Serialization;
 
+LoadDotEnv();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -37,9 +39,17 @@ builder.Services.AddMediatR(cfg =>
 });
 
 // Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString")
-                       ?? builder.Configuration.GetConnectionString("DefaultConnection")
-                       ?? throw new InvalidOperationException("Default database connection string is not configured.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Default database connection string is not configured.");
+}
 
 builder.Services.AddDbContext<VulnWatchDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -57,7 +67,21 @@ builder.Services.AddIdentityCore<User>(options =>
 .AddDefaultTokenProviders();
 
 // JWT Authentication
-var jwtKey = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!);
+var jwtSecret = builder.Configuration["Jwt:SecretKey"];
+
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+}
+
+var jwtKey = Encoding.UTF8.GetBytes(jwtSecret);
+
+if (jwtKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:SecretKey must be at least 32 characters (256 bits) for HS256 signing.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -120,3 +144,53 @@ app.Lifetime.ApplicationStarted.Register(() =>
 });
 
 app.Run();
+
+static void LoadDotEnv()
+{
+    foreach (var envPath in ResolveDotEnvCandidates())
+    {
+        if (!File.Exists(envPath))
+            continue;
+
+        foreach (var rawLine in File.ReadAllLines(envPath))
+        {
+            var line = rawLine.Trim();
+
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+                continue;
+
+            var separatorIndex = line.IndexOf('=');
+            if (separatorIndex <= 0)
+                continue;
+
+            var key = line[..separatorIndex].Trim();
+            var value = line[(separatorIndex + 1)..].Trim();
+
+            if (value.Length >= 2 &&
+                ((value.StartsWith('"') && value.EndsWith('"')) ||
+                 (value.StartsWith('\'') && value.EndsWith('\''))))
+            {
+                value = value[1..^1];
+            }
+
+            Environment.SetEnvironmentVariable(key, value);
+        }
+
+        return;
+    }
+}
+
+static IEnumerable<string> ResolveDotEnvCandidates()
+{
+    var currentDirectory = Directory.GetCurrentDirectory();
+    var appBaseDirectory = AppContext.BaseDirectory;
+
+    return new[]
+    {
+        Path.GetFullPath(Path.Combine(currentDirectory, "api-dotnet", ".env")),
+        Path.GetFullPath(Path.Combine(currentDirectory, ".env")),
+        Path.GetFullPath(Path.Combine(currentDirectory, "..", "..", ".env")),
+        Path.GetFullPath(Path.Combine(appBaseDirectory, "..", "..", "..", "..", ".env")),
+        Path.GetFullPath(Path.Combine(appBaseDirectory, "..", "..", "..", "..", "..", ".env"))
+    }.Distinct(StringComparer.OrdinalIgnoreCase);
+}

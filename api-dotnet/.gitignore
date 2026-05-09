@@ -154,6 +154,9 @@ coverage*.info
 .vscode
 settings.json
 settings.local.json
+.env
+.env.*
+!.env.example
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
