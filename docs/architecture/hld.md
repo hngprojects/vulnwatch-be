@@ -111,6 +111,23 @@ The following diagram illustrates the high-level orchestration between the .NET 
 ![User Authentication Flow](../puml/user_auth_flow.png)
 
 
+### 5.2 Domain Verification Flow
+
+![Domain Verification Flow](../puml/domain_verification_flow.png)
+
+### 5.3 Scan Initiation Flow (C# → Redis)
+
+### 5.4 Java Worker - Redis Consumer & Job Processing
+
+### 5.5 Java Worker - Parallel 5-Surface Scanner
+
+### 5.6 AI Intelligence Layer (OpenAI)
+
+### 5.8 SSL Expiry Alerting (C# Cron Job)
+
+### 5.9 Complete End-to-End Flow
+
+
 ### 🛠️ How to Update Diagrams
 
 To ensure the documentation stays in sync with the codebase, please follow these steps if you make architectural changes:
