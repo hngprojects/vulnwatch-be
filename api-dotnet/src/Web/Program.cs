@@ -37,8 +37,12 @@ builder.Services.AddMediatR(cfg =>
 });
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString")
+                       ?? builder.Configuration.GetConnectionString("DefaultConnection")
+                       ?? throw new InvalidOperationException("Default database connection string is not configured.");
+
 builder.Services.AddDbContext<VulnWatchDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+    options.UseNpgsql(connectionString));
 
 // Identity — AddIdentityCore avoids overriding auth scheme to cookies
 builder.Services.AddIdentityCore<User>(options =>
@@ -83,6 +87,7 @@ builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddHealthChecks()

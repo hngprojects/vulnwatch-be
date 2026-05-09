@@ -29,6 +29,13 @@ public class AuthController : ControllerBase
         return result.ToHttpResponse(this);
     }
 
+    [HttpPost("google")]
+    public async Task<ActionResult<Result<AuthResponse>>> GoogleLogin(GoogleLoginRequest request)
+    {
+        var result = await _mediator.Send(new GoogleLoginCommand(request.IdToken));
+        return result.ToHttpResponse(this);
+    }
+
     [HttpPost("forgot-password")]
     public async Task<ActionResult<Result<MessageResponse>>> ForgotPassword(ForgotPasswordRequest request)
     {

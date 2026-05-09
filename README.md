@@ -6,7 +6,7 @@ Vulnwatch is a scalable, event-driven domain security scanning platform. It allo
 
 The system is built on a distributed microservice architecture to decouple client-facing web traffic from heavy, long-running AI tasks.
 
-- **Frontend (Client Layer):** Split into two separate Next.js repositories (Landing Page & Dashboard WebApp) to optimize deployment. It communicates exclusively via REST HTTP. Authentication is handled strictly via Google OAuth.
+- **Frontend (Client Layer):** Split into two separate Next.js repositories (Landing Page & Dashboard WebApp) to optimize deployment. It communicates exclusively via REST HTTP. Authentication supports both email/password and Google OAuth.
 - **Core API (The Front Door):** A C# .NET API. It handles all frontend traffic, user sessions (JWT), domain management, and Postgres database writes. When a user requests a scan, the C# API creates a pending record and drops a job into the message broker.
 - **Message Broker:** A Redis queue that facilitates lightning-fast internal communication between the microservices.
 - **AI Worker (The Engine):** A headless Java Spring Boot service listening to Redis. It picks up scan jobs, executes the AI translation for the remediation steps, updates the Postgres database, and completes the lifecycle.
