@@ -122,6 +122,10 @@ The following diagram illustrates the high-level orchestration between the .NET 
 
 ### 5.4 Java Worker - Redis Consumer & Job Processing
 
+![Java Worker](../puml/java_worker_flow.png)
+
+
+
 ### 5.5 Java Worker - Parallel 5-Surface Scanner
 
 ### 5.6 AI Intelligence Layer (OpenAI)
