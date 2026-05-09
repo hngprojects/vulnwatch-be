@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Application.Features.Scans;
+using Web.Extensions;
 
 namespace Web.Controllers;
 
@@ -20,11 +21,12 @@ public class ScansController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateScanCommand command)
+    public async Task<IActionResult> Create(
+        [FromHeader(Name = "Idempotency-Key")] Guid idempotencyKey,
+        [FromBody] CreateScanRequest body)
     {
-        // We use MediatR to keep controllers thin. 
-        // The controller just passes the command to the right Handler.
-        var scanId = await _mediator.Send(command);
-        return Accepted(new { ScanId = scanId, Message = "Scan requested successfully" });
+        var command = new CreateScanCommand(idempotencyKey, body.Domain, body.ScanTypes);
+        var result = await _mediator.Send(command);
+        return result.ToHttpResponse(this);
     }
 }
