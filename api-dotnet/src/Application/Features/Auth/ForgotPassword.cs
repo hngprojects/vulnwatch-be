@@ -26,7 +26,7 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
     public async Task<Result<MessageResponse>> Handle(ForgotPasswordCommand cmd, CancellationToken ct)
     {
         // Always return the same message so we don't reveal whether the email exists
-        const string message = "If that email is registered, a reset link has been sent.";
+        const string message = "If this email is registered, a reset link has been sent.";
 
         var user = await _userManager.FindByEmailAsync(cmd.Email);
         if (user is null)

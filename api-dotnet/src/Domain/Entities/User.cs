@@ -16,4 +16,9 @@ public class User : IdentityUser<Guid>
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };
+
+    public void Activate()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

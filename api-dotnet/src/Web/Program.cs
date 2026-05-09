@@ -7,12 +7,16 @@ using Infrastructure.Persistence;
 using Infrastructure.Redis;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using System.Text;
 using System.Text.Json.Serialization;
+using Web.Middleware;
+using Web.Extensions;
+using Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +69,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = ctx =>
+            {
+                ctx.HandleResponse();
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -81,8 +93,11 @@ builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
 
 // Application services
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddHealthChecks()
@@ -97,8 +112,13 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "docs";
 });
 
+
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
+
+app.UseMiddleware<JwtMiddleware>();
+
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
