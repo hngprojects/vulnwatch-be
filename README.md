@@ -43,7 +43,7 @@ Follow these steps to set up the Vulnwatch backend locally.
    cd api-dotnet/src/Web
    dotnet run
    ```
-   The API will be available for handling REST requests.
+   The API will be available for handling REST requests and will apply pending EF Core migrations on startup.
 
 4. **Run the AI Worker (Java)**
    In a new terminal, navigate to the worker directory and run the Spring Boot application:
@@ -59,6 +59,19 @@ Follow these steps to set up the Vulnwatch backend locally.
 - `worker-java/`: Background workers built with Java and Spring Boot.
 - `shared/`: JSON schemas for shared contracts (e.g., Redis payloads).
 - `docs/`: Additional documentation and onboarding guides.
+
+## 🗃 Schema Migrations
+
+The .NET API uses EF Core migrations stored in `api-dotnet/src/Infrastructure/Migrations`.
+
+- Create a migration:
+  ```bash
+  dotnet ef migrations add <MigrationName> --project api-dotnet/src/Infrastructure/Infrastructure.csproj --startup-project api-dotnet/src/Infrastructure/Infrastructure.csproj --output-dir Migrations
+  ```
+- Apply migrations manually:
+  ```bash
+  dotnet ef database update --project api-dotnet/src/Infrastructure/Infrastructure.csproj --startup-project api-dotnet/src/Infrastructure/Infrastructure.csproj
+  ```
 
 ## 💡 Contributing
 
