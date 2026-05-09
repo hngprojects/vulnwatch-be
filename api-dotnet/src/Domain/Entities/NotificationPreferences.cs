@@ -1,18 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Domain.Entities;
 
-public class NotificationPreferences
+public class NotificationPreferences : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }             // one-to-one with User
-    public bool EmailAlerts { get; set; } = true;
-    public bool SlackAlerts { get; set; } = false;
-    public bool PushNotifications { get; set; } = false;
+    public Guid UserId { get; private set; }
+    public bool EmailAlerts { get; private set; }
+    public bool SlackAlerts { get; private set; }
+    public bool PushNotifications { get; private set; }
 
-    public User User { get; set; } = default!;
+    public User User { get; private set; } = default!;
+
+    private NotificationPreferences() { }
+
+    public static NotificationPreferences Create(Guid userId, bool emailAlerts = true)
+        => new()
+        {
+            UserId = userId,
+            EmailAlerts = emailAlerts,
+        };
+
+    public void Update(bool emailAlerts, bool slackAlerts, bool pushNotifications)
+    {
+        EmailAlerts = emailAlerts;
+        SlackAlerts = slackAlerts;
+        PushNotifications = pushNotifications;
+        Touch();
+    }
 }

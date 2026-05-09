@@ -1,24 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Enums;
 
-namespace Hng.Domain.Entities;
+namespace Domain.Entities;
 
-public class Scan
+public class Scan : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }
-    public Guid IdempotencyKey { get; set; }
-    public string TargetType { get; set; } = "domain"; // domain | repository
-    public Guid? DomainId { get; set; }
-    public string Status { get; set; } = "queued";   // queued|running|completed|failed
-    public int? SecurityScore { get; set; }
-    public DateTime? StartedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public Guid UserId { get; private set; }
+    public Guid IdempotencyKey { get; private set; }
+    public ScanTargetType TargetType { get; private set; }
+    public Guid? DomainId { get; private set; }
+    public ScanStatus Status { get; private set; }
+    public int? SecurityScore { get; private set; }
+    public DateTime? StartedAt { get; private set; }
+    public DateTime? CompletedAt { get; private set; }
 
-    public ScannedDomain? Domain { get; set; }
-    public User User { get; set; } = default!;
-    public ICollection<Finding> Findings { get; set; } = new List<Finding>();
+    public ScannedDomain? Domain { get; private set; }
+    public User User { get; private set; } = default!;
+    public ICollection<Finding> Findings { get; private set; } = new List<Finding>();
+
+    private Scan() { }
+
+    public static Scan Create(Guid userId, Guid idempotencyKey, ScanTargetType targetType, Guid? domainId = null)
+        => new()
+        {
+            UserId = userId,
+            IdempotencyKey = idempotencyKey,
+            TargetType = targetType,
+            DomainId = domainId,
+            Status = ScanStatus.Queued,
+        };
+
+    public void MarkRunning()
+    {
+        Status = ScanStatus.Running;
+        StartedAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    public void Complete(int securityScore)
+    {
+        Status = ScanStatus.Completed;
+        SecurityScore = securityScore;
+        CompletedAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    public void Fail()
+    {
+        Status = ScanStatus.Failed;
+        CompletedAt = DateTime.UtcNow;
+        Touch();
+    }
 }

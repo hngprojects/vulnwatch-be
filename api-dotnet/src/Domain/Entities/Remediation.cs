@@ -1,17 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Enums;
 
-public class Remediation
+namespace Domain.Entities;
+
+public class Remediation : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid FindingId { get; set; }
-    public int? PrNumber { get; set; }
-    public string? PrUrl { get; set; }
-    public string Status { get; set; } = "open"; // open | merged | closed | failed
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid FindingId { get; private set; }
+    public int? PrNumber { get; private set; }
+    public string? PrUrl { get; private set; }
+    public RemediationStatus Status { get; private set; }
 
-    public Finding Finding { get; set; } = default!;
+    public Finding Finding { get; private set; } = default!;
+
+    private Remediation() { }
+
+    public static Remediation Create(Guid findingId)
+        => new()
+        {
+            FindingId = findingId,
+            Status = RemediationStatus.Open,
+        };
+
+    public void AttachPr(int prNumber, string prUrl)
+    {
+        PrNumber = prNumber;
+        PrUrl = prUrl;
+        Touch();
+    }
+
+    public void SetStatus(RemediationStatus status)
+    {
+        Status = status;
+        Touch();
+    }
 }
