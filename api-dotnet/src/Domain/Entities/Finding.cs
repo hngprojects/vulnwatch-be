@@ -1,23 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Enums;
 
-namespace Hng.Domain.Entities;
+namespace Domain.Entities;
 
-public class Finding
+public class Finding : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid ScanId { get; set; }
-    public string Surface { get; set; } = default!; // HTTP_HEADERS|SSL|DNS|DEPENDENCY
-    public string Severity { get; set; } = default!; // Critical|High|Medium|Low
-    public string Title { get; set; } = default!;
-    public string? CveId { get; set; }
-    public string? AiExplanation { get; set; }
-    public string? TechnicalPayload { get; set; }
-    public string? RemediationSteps { get; set; }
-    public string Status { get; set; } = "open"; // open|remediated|ignored
+    public Guid ScanId { get; private set; }
+    public FindingSurface Surface { get; private set; }
+    public FindingSeverity Severity { get; private set; }
+    public string Title { get; private set; } = default!;
+    public string? CveId { get; private set; }
+    public string? AiExplanation { get; private set; }
+    public string? TechnicalPayload { get; private set; }
+    public string? RemediationSteps { get; private set; }
+    public FindingStatus Status { get; private set; }
 
-    public Scan Scan { get; set; } = default!;
+    public Scan Scan { get; private set; } = default!;
+
+    private Finding() { }
+
+    public static Finding Create(Guid scanId, FindingSurface surface, FindingSeverity severity, string title,
+        string? cveId = null, string? aiExplanation = null, string? technicalPayload = null, string? remediationSteps = null)
+        => new()
+        {
+            ScanId = scanId,
+            Surface = surface,
+            Severity = severity,
+            Title = title,
+            CveId = cveId,
+            AiExplanation = aiExplanation,
+            TechnicalPayload = technicalPayload,
+            RemediationSteps = remediationSteps,
+            Status = FindingStatus.Open,
+        };
+
+    public void Remediate()
+    {
+        Status = FindingStatus.Remediated;
+        Touch();
+    }
+
+    public void Ignore()
+    {
+        Status = FindingStatus.Ignored;
+        Touch();
+    }
 }

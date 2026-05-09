@@ -1,18 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
-
-public class WebHookOutBox
+public class WebHookOutBox : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string MessageBody { get; set; } = default!;
-    public int NumRetries { get; set; } = 0;
-    public OutboxStatus Status { get; set; } = OutboxStatus.Pending;
-    public DateTime? DeliveredAt { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string MessageBody { get; private set; } = default!;
+    public int NumRetries { get; private set; }
+    public OutboxStatus Status { get; private set; }
+    public DateTime? DeliveredAt { get; private set; }
+
+    private WebHookOutBox() { }
+
+    public static WebHookOutBox Create(string messageBody)
+        => new()
+        {
+            MessageBody = messageBody,
+            Status = OutboxStatus.Pending,
+        };
+
+    public void MarkDelivered()
+    {
+        Status = OutboxStatus.Delivered;
+        DeliveredAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    public void MarkDeadLetter()
+    {
+        Status = OutboxStatus.DeadLetter;
+        Touch();
+    }
+
+    public void IncrementRetry()
+    {
+        NumRetries++;
+        Touch();
+    }
 }
