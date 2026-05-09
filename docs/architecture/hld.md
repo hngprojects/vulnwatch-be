@@ -117,6 +117,9 @@ The following diagram illustrates the high-level orchestration between the .NET 
 
 ### 5.3 Scan Initiation Flow (C# → Redis)
 
+![Scan Initiation Flow](../puml/scan_flow.png)
+
+
 ### 5.4 Java Worker - Redis Consumer & Job Processing
 
 ### 5.5 Java Worker - Parallel 5-Surface Scanner
