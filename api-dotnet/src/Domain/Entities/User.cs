@@ -2,32 +2,18 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities;
 
-public class ApplicationUser: IdentityUser
-{}
-
-public class User : EntityBase
+public class User : IdentityUser<Guid>
 {
-    public string Email { get; private set; } = default!;
-    public string? PasswordHash { get; private set; }
     public string? GoogleId { get; private set; }
-    public bool IsEmailVerified { get; private set; }
-    public string? VerificationToken { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
 
-    private User() { }
-
-    public static User Create(string email, string? passwordHash = null, string? googleId = null, string? verificationToken = null)
-        => new()
-        {
-            Email = email,
-            PasswordHash = passwordHash,
-            GoogleId = googleId,
-            VerificationToken = verificationToken,
-        };
-
-    public void VerifyEmail()
+    public static User Create(string email) => new()
     {
-        IsEmailVerified = true;
-        VerificationToken = null;
-        Touch();
-    }
+        Id = Guid.NewGuid(),
+        Email = email,
+        UserName = email,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 }

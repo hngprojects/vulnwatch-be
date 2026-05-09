@@ -6,6 +6,8 @@ using Domain.Common;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Domain.Entities;
+using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Services;
 
@@ -13,34 +15,31 @@ public class JwtService : IJwtService
 {
     private readonly JwtConfig _options;
     private readonly SymmetricSecurityKey _signingKey;
+    private readonly IConfiguration _config;
  
     public JwtService(IOptions<JwtConfig> options)
     {
         _options = options.Value;
         _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
     }
- 
-    public string GenerateAccessToken(Guid userId, string email)
+
+    public string GenerateToken(User user)
     {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
+        var expireMinutes = int.Parse(_config["Jwt:ExpireInMinute"]!);
+
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub,   userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Iat,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
-                ClaimValueTypes.Integer64)
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email!)
         };
- 
+
         var token = new JwtSecurityToken(
-            issuer:             _options.Issuer,
-            audience:           _options.Audience,
-            claims:             claims,
-            notBefore:          DateTime.UtcNow,
-            expires:            DateTime.UtcNow.AddMinutes(_options.AccessTokenExpiryMinutes),
-            signingCredentials: new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
- 
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
  
@@ -92,3 +91,6 @@ public class JwtService : IJwtService
         }
     }
 }
+
+
+    

@@ -1,8 +1,9 @@
+using Application.Features.Auth;
+using Application.Features.Auth.DTOs;
+using Domain.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Application.Features.Scans;
 using Web.Extensions;
-using Application.Features.Authentication;
 
 namespace Web.Controllers;
 
@@ -11,17 +12,34 @@ namespace Web.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public AuthController(IMediator mediator)
+
+    public AuthController(IMediator mediator) => _mediator = mediator;
+
+    [HttpPost("register")]
+    public async Task<ActionResult<Result<AuthResponse>>> Register(RegisterRequest request)
     {
-        _mediator = mediator;
+        var result = await _mediator.Send(new RegisterCommand(request.Email, request.Password));
+        return result.ToHttpResponse(this);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> ForgotPassword(
-        [FromBody] ForgotPasswordRequest body)
+    [HttpPost("login")]
+    public async Task<ActionResult<Result<AuthResponse>>> Login(LoginRequest request)
     {
-        var command = new ForgotPasswordCommand(body.Email);
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new LoginCommand(request.Email, request.Password));
+        return result.ToHttpResponse(this);
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<Result<MessageResponse>>> ForgotPassword(ForgotPasswordRequest request)
+    {
+        var result = await _mediator.Send(new ForgotPasswordCommand(request.Email));
+        return result.ToHttpResponse(this);
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<Result<MessageResponse>>> ResetPassword(ResetPasswordRequest request)
+    {
+        var result = await _mediator.Send(new ResetPasswordCommand(request.Email, request.Token, request.NewPassword));
         return result.ToHttpResponse(this);
     }
 }
