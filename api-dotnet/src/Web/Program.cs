@@ -3,6 +3,7 @@ using Application.Features.Scans;
 using Infrastructure.Redis;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
+using Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,8 @@ app.UseSwaggerUI(options =>
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseMiddleware<JwtMiddleware>();
 
 app.UseAuthorization();
 
