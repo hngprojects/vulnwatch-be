@@ -13,14 +13,11 @@ namespace Infrastructure.Services;
 
 public class JwtService : IJwtService
 {
-    private readonly JwtConfig _options;
-    private readonly SymmetricSecurityKey _signingKey;
     private readonly IConfiguration _config;
  
-    public JwtService(IOptions<JwtConfig> options)
+    public JwtService(IConfiguration config)
     {
-        _options = options.Value;
-        _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
+        _config = config;
     }
 
     public string GenerateToken(User user)
@@ -52,18 +49,21 @@ public class JwtService : IJwtService
 
     public Result<TokenClaims> ValidateAccessToken(string token)
     {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
+        var issuer = _config["Jwt:Issuer"]!;
+        var audience = _config["Jwt:Audience"]!;
         var handler = new JwtSecurityTokenHandler();
  
         var validationParams = new TokenValidationParameters
         {
             ValidateIssuer           = true,
-            ValidIssuer              = _options.Issuer,
+            ValidIssuer              = issuer,
             ValidateAudience         = true,
-            ValidAudience            = _options.Audience,
+            ValidAudience            = audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey         = _signingKey,
+            IssuerSigningKey         = key,
             ValidateLifetime         = true,
-            ClockSkew                = TimeSpan.FromSeconds(30) // Small tolerance for clock drift
+            ClockSkew                = TimeSpan.FromSeconds(30)
         };
  
         try

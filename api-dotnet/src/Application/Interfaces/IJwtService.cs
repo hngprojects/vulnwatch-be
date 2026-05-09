@@ -1,6 +1,9 @@
+using Domain.Common;
 using Domain.Entities;
 
 namespace Application.Interfaces;
+
+public record TokenClaims(Guid UserId, string Email);
 
 public interface IJwtService
 {

@@ -1,6 +1,7 @@
 
 
 using Domain.Common;
+using Domain.Entities;
 
 namespace Application.Interfaces;
 
@@ -8,7 +9,7 @@ public record AuthTokens(string AccessToken, string RefreshToken, DateTime Acces
 
 public interface ISessionService
 {
-    Task<Result<AuthTokens>> IssueTokens(Guid userId, string email,
+    Task<Result<AuthTokens>> IssueTokens(User user,
         string? ipAddress = null, CancellationToken ct = default);
 
     Task<Result<AuthTokens>> Refresh(string refreshToken, string? ipAddress = null,
