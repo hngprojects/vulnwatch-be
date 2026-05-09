@@ -1,20 +1,36 @@
-﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Integration
+public class Integration : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }
-    public string Provider { get; set; } = default!;       // github | slack
-    public string InstallationId { get; set; } = default!; // integration-specific token ID
-    public IntegrationStatus Status { get; set; } = IntegrationStatus.INACTIVE;         // active | disconnected
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid UserId { get; private set; }
+    public string Provider { get; private set; } = default!;
+    public string InstallationId { get; private set; } = default!;
+    public IntegrationStatus Status { get; private set; }
 
-    public User User { get; set; } = default!;
+    public User User { get; private set; } = default!;
+
+    private Integration() { }
+
+    public static Integration Create(Guid userId, string provider, string installationId)
+        => new()
+        {
+            UserId = userId,
+            Provider = provider,
+            InstallationId = installationId,
+            Status = IntegrationStatus.INACTIVE,
+        };
+
+    public void Activate()
+    {
+        Status = IntegrationStatus.ACTIVE;
+        Touch();
+    }
+
+    public void Deactivate()
+    {
+        Status = IntegrationStatus.INACTIVE;
+        Touch();
+    }
 }

@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
-namespace Hng.Domain.Entities;
+namespace Domain.Entities;
 
-public class User
+public class User : IdentityUser<Guid>
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Email { get; set; } = default!;
-    public string? PasswordHash { get; set; }      // null for Google OAuth
-    public string? GoogleId { get; set; }
-    public bool IsEmailVerified { get; set; } = false;
-    public string? VerificationToken { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? GoogleId { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+
+    public static User Create(string email) => new()
+    {
+        Id = Guid.NewGuid(),
+        Email = email,
+        UserName = email,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 }
