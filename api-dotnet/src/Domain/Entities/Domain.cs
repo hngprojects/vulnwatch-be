@@ -1,20 +1,32 @@
-﻿namespace Hng.Domain.Entities;
+using Domain.Enums;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Domain.Entities;
 
-public class Domain
+public class ScannedDomain : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }
-    public string DomainName { get; set; } = default!;
-    public string? VerificationToken { get; set; }
-    public string VerificationStatus { get; set; } = "pending"; // pending | verified
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid UserId { get; private set; }
+    public string DomainName { get; private set; } = default!;
+    public string? VerificationToken { get; private set; }
+    public VerificationStatus VerificationStatus { get; private set; }
 
-    public User User { get; set; } = default!;
-    public ICollection<Scan> Scans { get; set; } = new List<Scan>();
+    public User User { get; private set; } = default!;
+    public ICollection<Scan> Scans { get; private set; } = new List<Scan>();
+
+    private ScannedDomain() { }
+
+    public static ScannedDomain Create(Guid userId, string domainName, string? verificationToken = null)
+        => new()
+        {
+            UserId = userId,
+            DomainName = domainName,
+            VerificationToken = verificationToken,
+            VerificationStatus = VerificationStatus.Pending,
+        };
+
+    public void Verify()
+    {
+        VerificationStatus = VerificationStatus.Verified;
+        VerificationToken = null;
+        Touch();
+    }
 }

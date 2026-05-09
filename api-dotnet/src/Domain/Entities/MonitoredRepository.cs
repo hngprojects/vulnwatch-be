@@ -1,22 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Domain.Entities;
 
-public class MonitoredRepository
+public class MonitoredRepository : EntityBase
 {
-    public long RepoId { get; set; }              // GitHub's unique repo ID (bigint PK)
-    public Guid UserId { get; set; }
-    public string FullName { get; set; } = default!; // e.g. "owner/repo"
-    public bool IsMonitoringActive { get; set; } = true;
-    public string DefaultBranch { get; set; } = "main";
-    public long GitHubInstallationId { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public long RepoId { get; private set; }
+    public Guid UserId { get; private set; }
+    public string FullName { get; private set; } = default!;
+    public bool IsMonitoringActive { get; private set; }
+    public string DefaultBranch { get; private set; } = default!;
+    public long GitHubInstallationId { get; private set; }
 
-    public User User { get; set; } = default!;
-    public ICollection<Scan> Scans { get; set; } = new List<Scan>();
-    public ICollection<VulnerabilityIntel> VulnerabilityIntels { get; set; } = new List<VulnerabilityIntel>();
+    public User User { get; private set; } = default!;
+    public ICollection<Scan> Scans { get; private set; } = new List<Scan>();
+
+    private MonitoredRepository() { }
+
+    public static MonitoredRepository Create(long repoId, Guid userId, string fullName, long gitHubInstallationId, string defaultBranch = "main")
+        => new()
+        {
+            RepoId = repoId,
+            UserId = userId,
+            FullName = fullName,
+            GitHubInstallationId = gitHubInstallationId,
+            DefaultBranch = defaultBranch,
+            IsMonitoringActive = true,
+        };
+
+    public void Deactivate()
+    {
+        IsMonitoringActive = false;
+        Touch();
+    }
+
+    public void Activate()
+    {
+        IsMonitoringActive = true;
+        Touch();
+    }
 }
