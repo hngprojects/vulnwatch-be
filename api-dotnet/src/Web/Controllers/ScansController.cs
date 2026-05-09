@@ -1,6 +1,7 @@
+using Application.Features.Scans;
+using Domain.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Application.Features.Scans;
 using Web.Extensions;
 
 namespace Web.Controllers;
@@ -21,7 +22,7 @@ public class ScansController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
+    public async Task<ActionResult<Result<ScanResponse>>> Create(
         [FromHeader(Name = "Idempotency-Key")] Guid idempotencyKey,
         [FromBody] CreateScanRequest body)
     {

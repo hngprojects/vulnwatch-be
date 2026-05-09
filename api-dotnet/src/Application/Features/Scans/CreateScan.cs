@@ -36,7 +36,7 @@ public class CreateScanHandler : IRequestHandler<CreateScanCommand, Result<ScanR
 
         // 2. Build the scan entity
         var scan = Scan.Create(
-            userId: Guid.Empty, // TODO: replace with authenticated user ID from auth context
+            userId: Guid.Empty, // TODO: replace with authenticated user ID from ICurrentUserService 
             idempotencyKey: request.IdempotencyKey,
             targetType: ScanTargetType.Domain
         );
