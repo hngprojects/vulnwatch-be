@@ -88,15 +88,26 @@ builder.Services.AddDbContext<VulnWatchDbContext>(options =>
 // Identity — AddIdentityCore avoids overriding auth scheme to cookies
 builder.Services.AddIdentityCore<User>(options =>
 {
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false;
-    options.User.RequireUniqueEmail = true;
+    // Password policy
+    options.Password.RequiredLength         = 8;
+    options.Password.RequireUppercase       = true;
+    options.Password.RequireLowercase       = true;
+    options.Password.RequireDigit           = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredUniqueChars    = 1;
+
+    // Email
+    options.User.RequireUniqueEmail         = true;
+    options.SignIn.RequireConfirmedEmail     = true;
+
+    // Lockout
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15);
+    options.Lockout.AllowedForNewUsers      = true;
 })
 .AddRoles<IdentityRole<Guid>>()
 .AddEntityFrameworkStores<VulnWatchDbContext>()
 .AddDefaultTokenProviders();
-
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:SecretKey"];
 

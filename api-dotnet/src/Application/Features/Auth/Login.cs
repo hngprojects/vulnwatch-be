@@ -26,6 +26,9 @@ public class LoginHandler : IRequestHandler<LoginCommand, Result<AuthResponse>>
         if (user is null || !await _userManager.CheckPasswordAsync(user, cmd.Password))
             return Result<AuthResponse>.Failure(Error.Unauthorized("Invalid email or password."));
 
+        if (!user.EmailConfirmed)
+            return Result<AuthResponse>.Failure(Error.Unauthorized("Please verify your email address before logging in."));
+
         var token = _jwt.GenerateToken(user);
         return Result<AuthResponse>.Success(AuthResponse.Create(token, user));
     }

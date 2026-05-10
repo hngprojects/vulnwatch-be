@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
         return result.ToHttpResponse(this);
     }
 
-    [HttpGet("verify-token")]
+    [HttpGet("verify")]
     public async Task<ActionResult<Result<AuthResponse>>> VerifyToken(
         [FromQuery] string userId,
         [FromQuery] string token,
