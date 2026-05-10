@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -42,7 +43,7 @@ public class HeaderCheck {
 
 
         } catch (Exception e){
-            log.error("An error occurred: ", e);
+            log.error("Header check failed for {}", domain, e);
         }
 
         return findings;
