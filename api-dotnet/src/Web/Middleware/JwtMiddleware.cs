@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Web.Middleware;
+
 public class JwtMiddleware
 {
     private readonly RequestDelegate _next;
@@ -11,7 +12,7 @@ public class JwtMiddleware
 
     public JwtMiddleware(RequestDelegate next, ILogger<JwtMiddleware> logger)
     {
-        _next   = next;
+        _next = next;
         _logger = logger;
     }
 

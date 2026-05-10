@@ -41,7 +41,7 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
         if (responseType.IsGenericType &&
             responseType.GetGenericTypeDefinition() == typeof(Result<>))
         {
-            var valueType     = responseType.GenericTypeArguments[0];
+            var valueType = responseType.GenericTypeArguments[0];
             var failureMethod = typeof(Result<>)
                 .MakeGenericType(valueType)
                 .GetMethod(nameof(Result<object>.Failure))!;
