@@ -10,12 +10,12 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 @Configuration
 public class RedisConfig {
 
-    @Bean
-    RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory,
-                                            RedisJobConsumer consumer) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(consumer, new ChannelTopic("scan-jobs"));
-        return container;
-    }
+  @Bean
+  RedisMessageListenerContainer container(
+      RedisConnectionFactory connectionFactory, RedisJobConsumer consumer) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    container.addMessageListener(consumer, new ChannelTopic("scan-jobs"));
+    return container;
+  }
 }
