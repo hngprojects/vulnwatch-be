@@ -21,7 +21,7 @@ public class VulnWatchDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
     public DbSet<MonitoredRepository> MonitoredRepositories => Set<MonitoredRepository>();
     public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
     public DbSet<WebHookOutBox> WebHookOutBox => Set<WebHookOutBox>();
-     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -36,17 +36,17 @@ public class VulnWatchDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
         builder.Entity<RefreshToken>(e =>
         {
             e.HasKey(t => t.Id);
-        
+
             e.Property(t => t.TokenHash)
             .IsRequired()
             .HasMaxLength(512);
-        
+
             e.HasIndex(t => t.TokenHash).IsUnique();
-        
+
             e.HasIndex(t => t.UserId);
-        
+
             e.Property(t => t.CreatedByIp).HasMaxLength(45);
-        
+
             e.HasOne<User>()
             .WithMany()
             .HasForeignKey(t => t.UserId)

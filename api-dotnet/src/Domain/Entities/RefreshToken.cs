@@ -12,9 +12,9 @@ public class RefreshToken : EntityBase
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
     public bool IsRevoked => RevokedAt is not null;
     public bool IsActive => !IsRevoked && !IsExpired;
- 
+
     private RefreshToken() { }
- 
+
     public static RefreshToken Create(Guid userId, string tokenHash, DateTime expiresAt, string? ip = null)
         => new()
         {
@@ -23,7 +23,7 @@ public class RefreshToken : EntityBase
             ExpiresAt = expiresAt,
             CreatedByIp = ip
         };
- 
+
     public void Revoke()
     {
         if (IsRevoked) return;

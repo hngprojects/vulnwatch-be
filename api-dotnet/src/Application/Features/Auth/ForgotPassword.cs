@@ -39,7 +39,7 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebUtility.UrlEncode(token);
-        
+
         var frontendUrl = _config["FrontendUrl:path"];
         var resetLink = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={encodedToken}";
 

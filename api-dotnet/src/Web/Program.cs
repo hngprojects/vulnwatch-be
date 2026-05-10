@@ -93,21 +93,21 @@ builder.Services.AddDbContext<VulnWatchDbContext>(options =>
 builder.Services.AddIdentityCore<User>(options =>
 {
     // Password policy
-    options.Password.RequiredLength         = 8;
-    options.Password.RequireUppercase       = true;
-    options.Password.RequireLowercase       = true;
-    options.Password.RequireDigit           = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
     options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredUniqueChars    = 1;
+    options.Password.RequiredUniqueChars = 1;
 
     // Email
-    options.User.RequireUniqueEmail         = true;
-    options.SignIn.RequireConfirmedEmail     = true;
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
 
     // Lockout
     options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15);
-    options.Lockout.AllowedForNewUsers      = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddRoles<IdentityRole<Guid>>()
 .AddEntityFrameworkStores<VulnWatchDbContext>()
@@ -175,12 +175,12 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         connectionString,
-        name:                "postgres",
-        tags:                ["db", "ready"])
+        name: "postgres",
+        tags: ["db", "ready"])
     .AddRedis(
         redisConfig,
-        name:                "redis",
-        tags:                ["cache", "ready"]);
+        name: "redis",
+        tags: ["cache", "ready"]);
 
 var app = builder.Build();
 
