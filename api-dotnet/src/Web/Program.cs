@@ -4,8 +4,10 @@ using Web.Services;
 using Application.Interfaces;
 using Domain.Entities;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repositories;
 using Infrastructure.Redis;
 using Infrastructure.Services;
+using Application.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,7 +18,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Web.Middleware;
 using Web.Extensions;
-using Infrastructure.Persistence.Repositories;
+
+LoadDotEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,8 +70,20 @@ builder.Services.AddMediatR(cfg =>
 });
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Default database connection string is not configured.");
+}
+
 builder.Services.AddDbContext<VulnWatchDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+    options.UseNpgsql(connectionString));
 
 // Identity — AddIdentityCore avoids overriding auth scheme to cookies
 builder.Services.AddIdentityCore<User>(options =>
@@ -83,7 +98,21 @@ builder.Services.AddIdentityCore<User>(options =>
 .AddDefaultTokenProviders();
 
 // JWT Authentication
-var jwtKey = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!);
+var jwtSecret = builder.Configuration["Jwt:SecretKey"];
+
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+}
+
+var jwtKey = Encoding.UTF8.GetBytes(jwtSecret);
+
+if (jwtKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:SecretKey must be at least 32 characters (256 bits) for HS256 signing.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -120,8 +149,10 @@ builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
 // Application services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
+builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection(JwtConfig.SectionName));
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -144,8 +175,6 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "docs";
 });
 
-
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 
@@ -161,3 +190,53 @@ app.Lifetime.ApplicationStarted.Register(() =>
 });
 
 app.Run();
+
+static void LoadDotEnv()
+{
+    foreach (var envPath in ResolveDotEnvCandidates())
+    {
+        if (!File.Exists(envPath))
+            continue;
+
+        foreach (var rawLine in File.ReadAllLines(envPath))
+        {
+            var line = rawLine.Trim();
+
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+                continue;
+
+            var separatorIndex = line.IndexOf('=');
+            if (separatorIndex <= 0)
+                continue;
+
+            var key = line[..separatorIndex].Trim();
+            var value = line[(separatorIndex + 1)..].Trim();
+
+            if (value.Length >= 2 &&
+                ((value.StartsWith('"') && value.EndsWith('"')) ||
+                 (value.StartsWith('\'') && value.EndsWith('\''))))
+            {
+                value = value[1..^1];
+            }
+
+            Environment.SetEnvironmentVariable(key, value);
+        }
+
+        return;
+    }
+}
+
+static IEnumerable<string> ResolveDotEnvCandidates()
+{
+    var currentDirectory = Directory.GetCurrentDirectory();
+    var appBaseDirectory = AppContext.BaseDirectory;
+
+    return new[]
+    {
+        Path.GetFullPath(Path.Combine(currentDirectory, "api-dotnet", ".env")),
+        Path.GetFullPath(Path.Combine(currentDirectory, ".env")),
+        Path.GetFullPath(Path.Combine(currentDirectory, "..", "..", ".env")),
+        Path.GetFullPath(Path.Combine(appBaseDirectory, "..", "..", "..", "..", ".env")),
+        Path.GetFullPath(Path.Combine(appBaseDirectory, "..", "..", "..", "..", "..", ".env"))
+    }.Distinct(StringComparer.OrdinalIgnoreCase);
+}
