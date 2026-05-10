@@ -20,8 +20,8 @@
 3. [Component Breakdown](#3-component-breakdown)
 4. [Technology Stack](#4-technology-stack)
 5. [Sequence Diagrams](#5-sequence-diagrams)
-6. [Data Flow](#6-data-flow)
-7. [Deployment Architecture](#7-deployment-architecture)
+6. [Appendix](#6-appendix)
+7. [Document Sign-off](#7-document-sign-off)
 
 ---
 
@@ -110,7 +110,6 @@ The following diagram illustrates the high-level orchestration between the .NET 
 
 ![User Authentication Flow](../puml/user_auth_flow.png)
 
-
 ### 5.2 Domain Verification Flow
 
 ![Domain Verification Flow](../puml/domain_verification_flow.png)
@@ -119,26 +118,29 @@ The following diagram illustrates the high-level orchestration between the .NET 
 
 ![Scan Initiation Flow](../puml/scan_flow.png)
 
-
 ### 5.4 Java Worker - Redis Consumer & Job Processing
 
 ![Java Worker -  Redis Consumer & Job Processing](../puml/java_worker_flow.png)
-
-
 
 ### 5.5 Java Worker - Parallel 5-Surface Scanner
 
 ![Java Worker - Parallel 5-Surface Scanner](../puml/java_parallel_scanner_flow.png)
 
-
 ### 5.6 AI Intelligence Layer (OpenAI)
 
 ![I Intelligence Layer (OpenAI)](../puml/AI_intelligence.png)
 
+### 5.7 Results Polling Flow (Frontend ← C#)
+
+![Results Polling Flow](../puml/frontend_polling_flow.png)
+
 ### 5.8 SSL Expiry Alerting (C# Cron Job)
+
+![SSL Expiry Alerting](../puml/ssl_expiry_alerting_flow.png)
 
 ### 5.9 Complete End-to-End Flow
 
+![Complete End-to-End Flow](../puml/end_to_end_scan_flow.png)
 
 ### 🛠️ How to Update Diagrams
 
@@ -154,3 +156,61 @@ To ensure the documentation stays in sync with the codebase, please follow these
 
 > If you add a **new** diagram, simply follow the steps above and reference it in this file using:
 > `![Diagram Name](../puml/your_new_file.png)`
+
+---
+
+## 6. Appendix
+
+### 6.1 Redis Message Schemas
+
+**Scan Job (C# → Worker)**
+
+```json
+{
+  "scan_id": "uuid",
+  "domain": "string",
+  "user_id": "uuid",
+  "timestamp": "ISO8601",
+  "retry_count": 0
+}
+```
+
+**Scan Result (Worker → C#)**
+
+```json
+{
+  "scan_id": "uuid",
+  "status": "completed|failed",
+  "security_score": 0-100,
+  "finding_count": "int",
+  "processed_at": "ISO8601"
+}
+```
+
+### 6.2 API Endpoint Summary
+
+
+| Method | Endpoint                    | Purpose       |
+| ------ | --------------------------- | ------------- |
+| POST   | `/api/auth/signup`          | Register      |
+| POST   | `/api/auth/login`           | Login         |
+| POST   | `/api/auth/google`          | Google OAuth  |
+| POST   | `/api/domains`              | Add domain    |
+| POST   | `/api/domains/{id}/verify`  | Verify domain |
+| POST   | `/api/domains/{id}/scans`   | Trigger scan  |
+| GET    | `/api/scans/{id}`           | Get results   |
+| GET    | `/api/monitoring/dashboard` | Live status   |
+
+---
+
+## 7. Document Sign-off
+
+
+| Role              | Name | Date | Signature |
+| ----------------- | ---- | ---- | --------- |
+| Product Owner     |      |      |           |
+| Team Lead (C#)   |      |      |           |
+| Team Lead (Java) |      |      |           |
+|                   |      |      |           |
+
+---
