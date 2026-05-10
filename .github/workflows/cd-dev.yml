@@ -15,17 +15,12 @@ env:
   ECR_REPOSITORY: vulnwatch
   ECS_CLUSTER: genderize-cluster
   ECS_SERVICE_API: vulnwatch-api
-  ECS_SERVICE_WORKER: vulnwatch-worker
   TASK_DEFINITION_API: vulnwatch-api-task
-  TASK_DEFINITION_WORKER: vulnwatch-worker-task
 
 jobs:
   build-and-push:
     name: Build & Push Images to ECR
     runs-on: ubuntu-latest
-    outputs:
-      api-image: ${{ steps.set-api-image.outputs.image }}
-      worker-image: ${{ steps.set-worker-image.outputs.image }}
 
     steps:
       - name: Checkout
@@ -56,35 +51,11 @@ jobs:
           cache-from: type=gha,scope=api-dev
           cache-to: type=gha,mode=max,scope=api-dev
 
-      - name: Export API image URI
-        id: set-api-image
-        run: |
-          echo "image=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:api-dev-${{ github.sha }}" \
-            >> $GITHUB_OUTPUT
-
-      - name: Build & push Worker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./worker-java
-          dockerfile: ./worker-java/Dockerfile
-          push: true
-          tags: |
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:worker-dev-${{ github.sha }}
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:worker-dev-latest
-          cache-from: type=gha,scope=worker-dev
-          cache-to: type=gha,mode=max,scope=worker-dev
-
-      - name: Export Worker image URI
-        id: set-worker-image
-        run: |
-          echo "image=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:worker-dev-${{ github.sha }}" \
-            >> $GITHUB_OUTPUT
-
   deploy-api:
     name: Deploy API to ECS (Dev)
     runs-on: ubuntu-latest
     needs: build-and-push
-    environment: dev  # optional — add this in GitHub Environments if you want
+    environment: dev
 
     steps:
       - name: Checkout
