@@ -122,13 +122,18 @@ The following diagram illustrates the high-level orchestration between the .NET 
 
 ### 5.4 Java Worker - Redis Consumer & Job Processing
 
-![Java Worker](../puml/java_worker_flow.png)
+![Java Worker -  Redis Consumer & Job Processing](../puml/java_worker_flow.png)
 
 
 
 ### 5.5 Java Worker - Parallel 5-Surface Scanner
 
+![Java Worker - Parallel 5-Surface Scanner](../puml/java_parallel_scanner_flow.png)
+
+
 ### 5.6 AI Intelligence Layer (OpenAI)
+
+![I Intelligence Layer (OpenAI)](../puml/AI_intelligence.png)
 
 ### 5.8 SSL Expiry Alerting (C# Cron Job)
 
