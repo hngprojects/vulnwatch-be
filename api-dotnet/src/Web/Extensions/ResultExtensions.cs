@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Web.Extensions;
 
@@ -28,4 +30,43 @@ public static class ResultExtensions
                 ErrorCode.Forbidden => new ObjectResult(result) { StatusCode = StatusCodes.Status403Forbidden },
                 _ => new ObjectResult(result) { StatusCode = StatusCodes.Status500InternalServerError },
             };
+}
+
+
+public static class HealthResponse
+{
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+ 
+    public static async Task WriteAsync(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json";
+ 
+        // Map HealthStatus to HTTP status code
+        context.Response.StatusCode = report.Status switch
+        {
+            HealthStatus.Healthy   => StatusCodes.Status200OK,
+            HealthStatus.Degraded  => StatusCodes.Status200OK,
+            HealthStatus.Unhealthy => StatusCodes.Status503ServiceUnavailable,
+            _                      => StatusCodes.Status503ServiceUnavailable
+        };
+ 
+        var response = new
+        {
+            status   = report.Status.ToString(),
+            duration = report.TotalDuration.ToString(@"hh\:mm\:ss\.fff"),
+            checks   = report.Entries.Select(e => new
+            {
+                name        = e.Key,
+                status      = e.Value.Status.ToString(),
+                duration    = e.Value.Duration.ToString(@"hh\:mm\:ss\.fff"),
+                description = e.Value.Exception?.Message ?? e.Value.Description,
+            })
+        };
+ 
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions));
+    }
 }

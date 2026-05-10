@@ -1,8 +1,8 @@
 using Application.Features.Auth;
 using Application.Features.Scans;
-using Web.Services;
 using Application.Interfaces;
 using Domain.Entities;
+using FluentValidation;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Redis;
@@ -16,8 +16,11 @@ using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using System.Text;
 using System.Text.Json.Serialization;
-using Web.Middleware;
 using Web.Extensions;
+using Web.Middleware;
+using Web.Services;
+using MediatR;
+using Application.Behaviours;
 
 LoadDotEnv();
 
@@ -62,12 +65,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// MediatR — scans Application assembly + Auth handlers in the same assembly
+// MediatR — scans Application assembly
+builder.Services.AddValidatorsFromAssembly(typeof(RegisterCommand).Assembly);
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssembly(typeof(CreateScanCommand).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly);
 });
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionString");
@@ -169,7 +173,14 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddHealthChecks()
-    .AddRedis(redisConfig, "redis");
+    .AddNpgSql(
+        connectionString,
+        name:                "postgres",
+        tags:                ["db", "ready"])
+    .AddRedis(
+        redisConfig,
+        name:                "redis",
+        tags:                ["cache", "ready"]);
 
 var app = builder.Build();
 
@@ -193,7 +204,15 @@ app.UseMiddleware<JwtMiddleware>();
 
 app.UseAuthorization();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = HealthResponse.WriteAsync
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthResponse.WriteAsync
+});
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
