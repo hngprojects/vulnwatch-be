@@ -91,3 +91,11 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: dotnet
+
+  # Required status check gate — branch protection looks for this job name
+  build_lint_test:
+    name: build_lint_test
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - run: echo "✅ API CI passed"
