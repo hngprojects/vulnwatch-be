@@ -1,0 +1,26 @@
+package com.vulnwatch.worker.scanners.dns.utility;
+
+import com.vulnwatch.worker.config.GeoIpManager;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class MmdbReloadScheduler {
+
+    private final GeoIpManager geoIpManager;
+
+    @Scheduled(cron = "0 0 3 * * SUN")
+    public void reloadWeekly() {
+
+        try {
+            geoIpManager.reloadDatabase();
+            System.out.println("MMDB reloaded");
+
+        } catch (Exception e) {
+            System.err.println("Failed to reload MMDB");
+            e.printStackTrace();
+        }
+    }
+}

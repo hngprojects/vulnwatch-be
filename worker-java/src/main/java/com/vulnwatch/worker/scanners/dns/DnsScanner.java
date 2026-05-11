@@ -2,6 +2,8 @@ package com.vulnwatch.worker.scanners.dns;
 
 import com.vulnwatch.worker.models.ScanJob;
 import org.springframework.stereotype.Service;
+import org.xbill.DNS.*;
+import org.xbill.DNS.Record;
 
 @Service
 public class DnsScanner {
@@ -12,6 +14,24 @@ public class DnsScanner {
      */
     public void scan(ScanJob job) {
         System.out.println("Starting DNS scan for domain: " + job.getDomain());
-        // Implementation logic for DNS lookup...
+
+        String domain = job.getDomain();
+
+
+    }
+
+    private void scanRecordTypeA(String domain) throws TextParseException {
+        Lookup lookup = new Lookup(domain, Type.A);
+        Lookup lookup1 = new Lookup(domain);
+
+        ARecord[] records = (ARecord[]) lookup.run();
+
+
+        for(ARecord record: records){
+           String address = String.valueOf(record.getAddress());
+           long ttl = record.getTTL();
+
+        }
+
     }
 }
