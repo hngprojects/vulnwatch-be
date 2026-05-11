@@ -27,13 +27,13 @@ title Java Worker Class Diagram
 class ScanJob {
     - scanId: UUID
     - domain: String
-    - scanTypes: List<String>
+    - scanTypes: List<TargetType>
     - requestedBy: UUID
     - enqueuedAt: Instant
     --
     + getScanId(): UUID
     + getDomain(): String
-    + getScanTypes(): List<String>
+    + getScanTypes(): List<TargetType>
     + getRequestedBy(): UUID
     + getEnqueuedAt(): Instant
 }
@@ -103,6 +103,7 @@ enum SurfaceType {
     SAST
     SECRETS
 }
+
 
 ' Findings table (matches ERD)
 class Finding {
