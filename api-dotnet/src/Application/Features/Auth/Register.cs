@@ -53,7 +53,7 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, Result<AuthRespo
 
         var body = BuildVerificationEmailBody(user.UserName!, verificationLink);
 
-        // await _email.SendAsync(user.Email!, "Verify Your Email", body);
+        await _email.SendAsync(user.Email!, "Verify Your Email", body);
 
         var token = _jwt.GenerateToken(user);
         return Result<AuthResponse>.Success(AuthResponse.Create(token, user));
