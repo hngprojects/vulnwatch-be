@@ -1,4 +1,6 @@
 using Application.Features.Scans;
+using Application.Features.Scans.GetScanHistory;
+using Application.Interfaces;
 using Domain.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +17,12 @@ namespace Web.Controllers;
 public class ScansController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICurrentUser _currentUser;
 
-    public ScansController(IMediator mediator)
+    public ScansController(IMediator mediator, ICurrentUser currentUser)
     {
         _mediator = mediator;
+        _currentUser = currentUser;
     }
 
     [HttpPost]
@@ -28,6 +32,17 @@ public class ScansController : ControllerBase
     {
         var command = new CreateScanCommand(idempotencyKey, body.Domain, body.ScanTypes);
         var result = await _mediator.Send(command);
+        return result.ToHttpResponse(this);
+    }
+
+    [HttpGet("domains/{domainId:guid}/scans")]
+    public async Task<ActionResult<Result<ScanHistoryResponse>>> GetHistory(
+        Guid domainId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var query = new GetScanHistoryQuery(domainId, _currentUser.UserId, page, pageSize);
+        var result = await _mediator.Send(query);
         return result.ToHttpResponse(this);
     }
 }
