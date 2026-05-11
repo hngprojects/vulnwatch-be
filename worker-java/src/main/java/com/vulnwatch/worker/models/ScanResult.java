@@ -49,8 +49,9 @@ public class ScanResult {
             example = "DNS lookup timeout after 10 seconds")
     private String errorMessage;
 
+    @Builder.Default
     @Schema(description = "Raw technical data from the scanner (varies by scanner type)")
-    private Map<String, Object> rawData;
+    private Map<String, Object> rawData = new HashMap<>();
 
 
     /**
