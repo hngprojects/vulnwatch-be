@@ -26,23 +26,20 @@ title Java Worker Class Diagram
 
 class ScanJob {
     - scanId: UUID
-    - userId: UUID
-    - idempotencyKey: UUID
-    - targetType: TargetType
+    - targetType: List<TargetType>
     - domainId: UUID
-    - repoId: Long
     - domainName: String
+    - repoId: Long
     - repoFullName: String
     - createdAt: Instant
     --
     + getScanId(): UUID
-    + getUserId(): UUID
-    + getIdempotencyKey(): UUID
-    + getTargetType(): TargetType
+    + getTargetType(): List<TargetType>
     + getDomainId(): UUID
-    + getRepoId(): Long
     + getDomainName(): String
+    + getRepoId(): Long
     + getRepoFullName(): String
+    + getCreatedAt(): Instant
 }
 
 enum TargetType {
@@ -356,7 +353,7 @@ Finding --> Severity : uses
 Finding --> FindingStatus : uses
 
 ScanResult --> SurfaceType : uses
-ScanJob --> TargetType : uses
+ScanJob "1" o-- "many" TargetType : contains
 Scanner --> TargetType : returns
 ScanOrchestrator --> TargetType : filters by
 
