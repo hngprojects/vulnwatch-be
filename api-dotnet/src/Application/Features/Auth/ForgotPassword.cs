@@ -45,7 +45,7 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
 
         _logger.LogInformation("VERIFICATION LINK: {link}", resetLink);
 
-        // await _email.SendAsync(cmd.Email, "Reset your password", $"Click here to reset your password: {resetLink}");
+        await _email.SendAsync(cmd.Email, "Reset your password", $"Click here to reset your password: {resetLink}");
 
         return Result<MessageResponse>.Success(MessageResponse.Create(message));
     }
