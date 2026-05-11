@@ -1,5 +1,6 @@
 package com.vulnwatch.worker.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vulnwatch.worker.enums.TargetType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -12,48 +13,54 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * ScanJob model: Matches the JSON structure from the Redis queue.
- * Intern-friendly: This is the "Payload" we receive from the C# API.
+ * ScanJob model - matches the JSON payload from C# API.
+ *
+ * <p>C# publishes to Redis channel "scan-jobs" with structure:
+ * <pre>
+ * {
+ *   "scan_id": "uuid",
+ *   "domain": "example.com",
+ *   "scan_types": ["DOMAIN"],
+ *   "requested_by": "user-id",
+ *   "enqueuedAt": "2026-05-11T10:00:00Z"
+ * }
+ * </pre>
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Scan job received from C# API via Redis queue")
+@Schema(description = "Scan job from C# API via Redis channel 'scan-jobs'")
 public class ScanJob {
 
-    @Schema(description = "Unique identifier for this scan",
-            example = "550e8400-e29b-41d4-a716-446655440000",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @JsonProperty("scan_id")
+    @Schema(description = "Unique identifier for this scan", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID scanId;
 
-    @Schema(description = "Target types to scan (can be multiple, e.g., DOMAIN and REPOSITORY)",
-            example = "[\"DOMAIN\"]",
-            allowableValues = {"DOMAIN", "REPOSITORY"},
-            requiredMode = Schema.RequiredMode.REQUIRED)
-    private List<TargetType> targetType;
+    @JsonProperty("domain")
+    @Schema(description = "Domain name to scan (for DOMAIN type)", example = "example.com")
+    private String domain;
 
-    @Schema(description = "Domain ID (required if targetType contains DOMAIN)",
-            example = "550e8400-e29b-41d4-a716-446655440001")
-    private UUID domainId;
+    @JsonProperty("scan_types")
+    @Schema(description = "List of scan types to perform", example = "[\"DOMAIN\"]")
+    private List<TargetType> scanTypes;
 
-    @Schema(description = "Domain name (required if targetType contains DOMAIN)",
-            example = "example.com")
-    private String domainName;
+    @JsonProperty("requested_by")
+    @Schema(description = "ID of the user who requested the scan", example = "550e8400-e29b-41d4-a716-446655440001")
+    private UUID requestedBy;
 
-    @Schema(description = "Repository ID (required if targetType contains REPOSITORY)",
-            example = "123456789")
-    private Long repoId;
+    @JsonProperty("enqueuedAt")
+    @Schema(description = "When the scan was enqueued by C#", example = "2026-05-11T10:00:00Z")
+    private Instant enqueuedAt;
 
-    @Schema(description = "Repository full name (required if targetType contains REPOSITORY)",
-            example = "owner/repo-name")
-    private String repoFullName;
 
-    @Schema(description = "When the scan job was created",
-            example = "2026-05-11T10:00:00Z")
-    private Instant createdAt;
 
+    public boolean isDomainScan() {
+        return scanTypes != null && scanTypes.contains(TargetType.DOMAIN);
+    }
+
+    public boolean isRepositoryScan() {
+        return scanTypes != null && scanTypes.contains(TargetType.REPOSITORY);
+    }
 
 }
-
-
