@@ -56,7 +56,7 @@ public class GoogleTokenVerifier : IGoogleTokenVerifier
             ValidateAudience = true,
             ValidAudience = clientId,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1)
+            ClockSkew = TimeSpan.FromMinutes(2)   // Was 1
         };
 
         try
@@ -76,13 +76,29 @@ public class GoogleTokenVerifier : IGoogleTokenVerifier
 
             return Result<GoogleUserInfo>.Success(new GoogleUserInfo(subject, email, emailVerified));
         }
-        catch (ArgumentException)
+        catch (SecurityTokenExpiredException)
         {
-            return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid Google token."));
+            return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Google token has expired."));
         }
-        catch (SecurityTokenException)
+        catch (SecurityTokenInvalidAudienceException)
         {
-            return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid Google token."));
+            return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid audience (Client ID mismatch)."));
         }
+        catch (SecurityTokenInvalidIssuerException)
+        {
+            return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid issuer."));
+        }
+        catch (Exception ex) when (ex is ArgumentException || ex is SecurityTokenException)
+        {
+            return Result<GoogleUserInfo>.Failure(Error.Unauthorized($"Invalid Google token: {ex.Message}"));
+        }
+        // catch (ArgumentException)
+        // {
+        //     return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid Google token."));
+        // }
+        // catch (SecurityTokenException)
+        // {
+        //     return Result<GoogleUserInfo>.Failure(Error.Unauthorized("Invalid Google token."));
+        // }
     }
 }
