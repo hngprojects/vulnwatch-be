@@ -1,3 +1,4 @@
+using System.Net;
 using Application.Features.Auth.DTOs;
 using Domain.Common;
 using Domain.Entities;
@@ -20,7 +21,9 @@ public class ResetPasswordHandler : IRequestHandler<ResetPasswordCommand, Result
         if (user is null)
             return Result<MessageResponse>.Failure(Error.NotFound("User not found."));
 
-        var result = await _userManager.ResetPasswordAsync(user, cmd.Token, cmd.NewPassword);
+        var decodedToken = WebUtility.UrlDecode(cmd.Token);
+
+        var result = await _userManager.ResetPasswordAsync(user, decodedToken, cmd.NewPassword);
         if (!result.Succeeded)
             return Result<MessageResponse>.Failure(Error.Validation(result.Errors.First().Description));
 
