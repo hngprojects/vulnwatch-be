@@ -14,9 +14,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ScanProcessor {
 
-    private final DnsScanner dnsScanner;
-    private final HttpParallelScanner httpScanner;
-    // Add other scanners here: SSL, Headers, etc.
+  private final DnsScanner dnsScanner;
+  private final HttpParallelScanner httpScanner;
+
+  // Add other scanners here: SSL, Headers, etc.
   public void process(ScanJob job) {
     System.out.println("Processing job " + job.getScan_id() + " for domain " + job.getDomain());
 
@@ -30,7 +31,7 @@ public class ScanProcessor {
           System.out.println("SSL scan requested (Not implemented yet)");
           break;
         case "headers":
-            httpScanner.scan(job);
+          httpScanner.scan(job);
           break;
         default:
           System.out.println("Unknown scan type: " + type);

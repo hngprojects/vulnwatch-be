@@ -9,16 +9,12 @@ import java.time.Duration;
 
 public class HttpUtils {
 
-    private  static final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+  private static final HttpClient client =
+      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
-    public static HttpResponse<String> sendGet(String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .timeout(Duration.ofSeconds(10))
-                .build();
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
-    }
+  public static HttpResponse<String> sendGet(String url) throws IOException, InterruptedException {
+    HttpRequest request =
+        HttpRequest.newBuilder().uri(URI.create(url)).GET().timeout(Duration.ofSeconds(10)).build();
+    return client.send(request, HttpResponse.BodyHandlers.ofString());
+  }
 }
