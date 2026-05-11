@@ -24,7 +24,7 @@ title Java Worker Class Diagram
 
 
 
-class ScanRequest {
+class ScanJob {
     - scanId: UUID
     - userId: UUID
     - idempotencyKey: UUID
@@ -72,7 +72,7 @@ class ScanEntity {
 }
 
 ' Raw data container (in-memory only, not stored in DB)
-class RawScanData {
+class ScanResult {
     - scanId: UUID
     - scannerName: String
     - surface: SurfaceType
@@ -87,7 +87,7 @@ class RawScanData {
 class AggregatedRawData {
     - scanId: UUID
     - domain: String
-    - rawResults: List<RawScanData>
+    - rawResults: List<ScanResult>
     - failures: List<FailureInfo>
     --
     + toJson(): String
@@ -186,57 +186,57 @@ class EnrichedScanResult {
 
 interface Scanner {
     ..
-    + scan(ScanRequest request): RawScanData
+    + scan(ScanJob request): ScanResult
     + getSupportedTargetType(): TargetType
 }
 
 ' ----- DOMAIN SCANNERS (5 scanners) -----
 class DnsScanner {
     --
-    + scan(ScanRequest request): RawScanData
+    + scan(ScanJob request): ScanResult
     + getSupportedTargetType(): TargetType
 }
 
 class SslScanner {
     --
-    + scan(ScanRequest request): RawScanData
+    + scan(ScanJob request): ScanResult
     + getSupportedTargetType(): TargetType
 }
 
 class HttpScanner {
     --
-    + scan(ScanRequest request): RawScanData
+    + scan(ScanJob request): ScanResult
     + getSupportedTargetType(): TargetType
 }
 
 'class CtLogScanner {
 '    --
-'    + scan(ScanRequest request): RawScanData
+'    + scan(ScanJob request): ScanResult
 '    + getSupportedTargetType(): TargetType
 '}
 '
 'class ExposureScanner {
 '    --
-'    + scan(ScanRequest request): RawScanData
+'    + scan(ScanJob request): ScanResult
 '    + getSupportedTargetType(): TargetType
 '}
 '
 '' ----- REPOSITORY SCANNERS (3 scanners) -----
 'class DependencyScanner {
 '    --
-'    + scan(ScanRequest request): RawScanData
+'    + scan(ScanJob request): ScanResult
 '    + getSupportedTargetType(): TargetType
 '}
 '
 'class SastScanner {
 '    --
-'    + scan(ScanRequest request): RawScanData
+'    + scan(ScanJob request): ScanResult
 '    + getSupportedTargetType(): TargetType
 '}
 '
 'class SecretsScanner {
 '    --
-'    + scan(ScanRequest request): RawScanData
+'    + scan(ScanJob request): ScanResult
 '    + getSupportedTargetType(): TargetType
 '}
 
@@ -246,9 +246,9 @@ class ScanOrchestrator {
     - scanners: List<Scanner>
     - timeout: Duration
     --
-    + runScan(ScanRequest request): AggregatedRawData
+    + runScan(ScanJob request): AggregatedRawData
     - filterScannersByTargetType(targetType: TargetType): List<Scanner>
-    - aggregateRawResults(futures: List<Future<RawScanData>>): AggregatedRawData
+    - aggregateRawResults(futures: List<Future<ScanResult>>): AggregatedRawData
 }
 
 ' ============================================
@@ -319,7 +319,7 @@ Scanner <|.. HttpScanner : implements
 
 ' Orchestrator connections
 ScanOrchestrator --> Scanner : uses
-ScanOrchestrator --> ScanRequest : receives
+ScanOrchestrator --> ScanJob : receives
 ScanOrchestrator ..> AggregatedRawData : produces
 
 ' AI Enricher connections
@@ -346,7 +346,7 @@ AiEnricher --> ScanRepository : updates
 ' COMPOSITION ARROWS
 ' ============================================
 
-AggregatedRawData --> RawScanData : contains
+AggregatedRawData --> ScanResult : contains
 AggregatedRawData --> FailureInfo : contains
 EnrichedScanResult --> Finding : contains
 
@@ -355,8 +355,8 @@ Finding --> SurfaceType : uses
 Finding --> Severity : uses
 Finding --> FindingStatus : uses
 
-RawScanData --> SurfaceType : uses
-ScanRequest --> TargetType : uses
+ScanResult --> SurfaceType : uses
+ScanJob --> TargetType : uses
 Scanner --> TargetType : returns
 ScanOrchestrator --> TargetType : filters by
 
@@ -365,7 +365,7 @@ Finding <--> Remediation : 1 : 0..1
 
 
 
-note top of RawScanData
+note top of ScanResult
   <b>IN-MEMORY</b>
   • Temporary container for raw scanner output
   • Used only to pass data to AI
@@ -392,7 +392,7 @@ note right of ScanOrchestrator
   <b>Threading Strategy:</b>
   • Executors.newFixedThreadPool(5)
   • scanners run in parallel
-  • Each scanner returns RawScanData (in-memory)
+  • Each scanner returns ScanResult (in-memory)
   • Results aggregated after all complete
 end note
 
