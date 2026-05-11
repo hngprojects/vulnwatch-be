@@ -26,20 +26,16 @@ title Java Worker Class Diagram
 
 class ScanJob {
     - scanId: UUID
-    - targetType: List<TargetType>
-    - domainId: UUID
-    - domainName: String
-    - repoId: Long
-    - repoFullName: String
-    - createdAt: Instant
+    - domain: String
+    - scanTypes: List<String>
+    - requestedBy: UUID
+    - enqueuedAt: Instant
     --
     + getScanId(): UUID
-    + getTargetType(): List<TargetType>
-    + getDomainId(): UUID
-    + getDomainName(): String
-    + getRepoId(): Long
-    + getRepoFullName(): String
-    + getCreatedAt(): Instant
+    + getDomain(): String
+    + getScanTypes(): List<String>
+    + getRequestedBy(): UUID
+    + getEnqueuedAt(): Instant
 }
 
 enum TargetType {
