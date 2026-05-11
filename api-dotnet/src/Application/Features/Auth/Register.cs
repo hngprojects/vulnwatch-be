@@ -49,7 +49,7 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, Result<AuthRespo
 
         var verificationLink = $"{_config["BaseUrl:Path"]!}/api/Auth/verify-token?userId={user.Id!}&token={encodedToken}";
 
-        _logger.LogInformation("VERIFICATION LINK: {link}", verificationLink);
+        // _logger.LogInformation("VERIFICATION LINK: {link}", verificationLink);
 
         var body = BuildVerificationEmailBody(user.UserName!, verificationLink);
 

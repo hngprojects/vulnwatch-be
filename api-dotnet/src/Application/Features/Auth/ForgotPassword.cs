@@ -43,7 +43,7 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
         var frontendUrl = _config["FrontendUrl:path"];
         var resetLink = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={encodedToken}";
 
-        _logger.LogInformation("VERIFICATION LINK: {link}", resetLink);
+        // _logger.LogInformation("VERIFICATION LINK: {link}", resetLink);
 
         await _email.SendAsync(cmd.Email, "Reset your password", $"Click here to reset your password: {resetLink}", ct);
 
