@@ -21,8 +21,6 @@ using Web.Middleware;
 using Web.Services;
 using MediatR;
 using Application.Behaviours;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 LoadDotEnv();
 
@@ -158,7 +156,7 @@ var redisConfig = builder.Configuration.GetValue<string>("Redis:Configuration") 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var config = ConfigurationOptions.Parse(redisConfig);
-    config.AbortOnConnectFail = false;
+    config.AbortOnConnectFail = false;    
     return ConnectionMultiplexer.Connect(config);
 });
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
@@ -169,13 +167,6 @@ builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, Authorizati
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection(JwtConfig.SectionName));
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-// === Google OpenID Configuration for ID Token Verification ===
-var googleConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-    "https://accounts.google.com/.well-known/openid-configuration",
-    new OpenIdConnectConfigurationRetriever(),
-    new HttpDocumentRetriever());
-
-builder.Services.AddSingleton<IConfigurationManager<OpenIdConnectConfiguration>>(googleConfigurationManager);
 builder.Services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
