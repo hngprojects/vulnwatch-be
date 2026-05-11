@@ -34,6 +34,7 @@ RUN dotnet publish Web.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 4: Final Image
 FROM base AS final
+USER root
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Web.dll"]
