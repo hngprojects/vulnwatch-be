@@ -20,12 +20,12 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ScanJob {
     private UUID scanId;
-    private UUID userId;
-    private UUID idempotencyKey;
-    private TargetType targetType;
+    private List<TargetType> targetType;
     private UUID domainId;
     private String domainName;
     private Long repoId;
     private String repoFullName;
     private Instant createdAt;
 }
+
+
