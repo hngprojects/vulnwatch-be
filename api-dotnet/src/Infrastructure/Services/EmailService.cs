@@ -17,7 +17,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task SendAsync(string to, string subject, string body)
+    public async Task SendAsync(string to, string subject, string body, CancellationToken ct = default)
     {
         SmtpCredentials? credentials;
 
@@ -31,17 +31,26 @@ public class EmailService : IEmailService
             return;
         }
 
-        using var client = new SmtpClient(credentials.Host, credentials.Port)
-        {
-            Credentials = new NetworkCredential(credentials.Username, credentials.Password),
-            EnableSsl = true
-        };
-
         try
         {
-            await client.SendMailAsync(new MailMessage(credentials.Username, to, subject, body));
-            _logger.LogInformation("Email sent to {Recipient} with subject '{Subject}'.", to, subject);
-            return;
+            using var client = new SmtpClient(credentials.Host, credentials.Port)
+            {
+                Credentials = new NetworkCredential(credentials.Username, credentials.Password),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(credentials.FromEmail, credentials.FromName),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true,
+            };
+            mailMessage.To.Add(to);
+
+            await client.SendMailAsync(mailMessage, ct);
+            _logger.LogInformation("Email sent successfully to {To}", to);
         }
         catch (SmtpException ex)
         {
@@ -54,9 +63,10 @@ public class EmailService : IEmailService
             return;
         }
     }
+
 }
 
-internal sealed record SmtpCredentials(string Host, int Port, string Username, string Password)
+internal sealed record SmtpCredentials(string Host, int Port, string Username, string Password, string FromName, string FromEmail)
 {
     public static SmtpCredentials Load(IConfiguration config)
     {
@@ -64,6 +74,8 @@ internal sealed record SmtpCredentials(string Host, int Port, string Username, s
         var portRaw = config["SmtpCredentials:Port"];
         var username = config["SmtpCredentials:Username"];
         var password = config["SmtpCredentials:Password"];
+        var fromEmail = config["SmtpCredentials:FromEmail"];
+        var fromName = config["SmtpCredentials:FromName"];
 
         if (string.IsNullOrWhiteSpace(host))
             throw new InvalidOperationException("SMTP host is not configured.");
@@ -77,6 +89,12 @@ internal sealed record SmtpCredentials(string Host, int Port, string Username, s
         if (string.IsNullOrWhiteSpace(password))
             throw new InvalidOperationException("SMTP password is not configured.");
 
-        return new(host, port, username, password);
+        if (string.IsNullOrWhiteSpace(fromEmail))
+            throw new InvalidOperationException("SMTP fromEmail is not configured.");
+
+        if (string.IsNullOrWhiteSpace(fromName))
+            throw new InvalidOperationException("SMTP fromName is not configured.");
+
+        return new(host, port, username, password, fromName, fromEmail);
     }
 }
