@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Web.Middleware;
+
 public class JwtMiddleware
 {
     private readonly RequestDelegate _next;
@@ -11,7 +12,7 @@ public class JwtMiddleware
 
     public JwtMiddleware(RequestDelegate next, ILogger<JwtMiddleware> logger)
     {
-        _next   = next;
+        _next = next;
         _logger = logger;
     }
 
@@ -51,9 +52,11 @@ public class JwtMiddleware
     {
         var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
 
-        if (authHeader is null || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(authHeader) ||
+            !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             return null;
 
-        return authHeader["Bearer ".Length..].Trim();
+        var token = authHeader["Bearer ".Length..].Trim();
+        return string.IsNullOrWhiteSpace(token) ? null : token;
     }
 }

@@ -47,13 +47,13 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, Result<AuthRespo
 
         var encodedToken = WebUtility.UrlEncode(verificationToken);
 
-        var verificationLink =  $"{_config["BaseUrl:Path"]!}/api/Auth/verify-token?userId={user.Id!}&token={encodedToken}";
+        var verificationLink = $"{_config["BaseUrl:Path"]!}/api/Auth/verify-token?userId={user.Id!}&token={encodedToken}";
 
         _logger.LogInformation("VERIFICATION LINK: {link}", verificationLink);
 
         var body = BuildVerificationEmailBody(user.UserName!, verificationLink);
 
-        // await _email.SendAsync(user.Email!, "Verify Your Email", body);
+        await _email.SendAsync(user.Email!, "Verify Your Email", body);
 
         var token = _jwt.GenerateToken(user);
         return Result<AuthResponse>.Success(AuthResponse.Create(token, user));

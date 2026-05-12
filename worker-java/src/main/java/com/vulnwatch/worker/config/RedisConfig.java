@@ -19,7 +19,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @RequiredArgsConstructor
 public class RedisConfig {
 
-    public static final String SCAN_QUEUE_CHANNEL = "scan:queue";
+    public static final String SCAN_JOB_CHANNEL = "scan-jobs";
+    public static final String SCAN_RESULTS_QUEUE = "scan-results";
 
     private final RedisConnectionFactory connectionFactory;
 
@@ -46,8 +47,8 @@ public class RedisConfig {
     public RedisMessageListenerContainer redisContainer(RedisJobConsumer consumer) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(consumer, new ChannelTopic(SCAN_QUEUE_CHANNEL));
-        log.info("Redis listener started on channel: {}", SCAN_QUEUE_CHANNEL);
+        container.addMessageListener(consumer, new ChannelTopic(SCAN_JOB_CHANNEL));
+        log.info("Redis listener started on channel: {}", SCAN_JOB_CHANNEL);
         return container;
     }
 }

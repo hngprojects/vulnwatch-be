@@ -26,23 +26,16 @@ title Java Worker Class Diagram
 
 class ScanJob {
     - scanId: UUID
-    - userId: UUID
-    - idempotencyKey: UUID
-    - targetType: TargetType
-    - domainId: UUID
-    - repoId: Long
-    - domainName: String
-    - repoFullName: String
-    - createdAt: Instant
+    - domain: String
+    - scanTypes: List<TargetType>
+    - requestedBy: UUID
+    - enqueuedAt: Instant
     --
     + getScanId(): UUID
-    + getUserId(): UUID
-    + getIdempotencyKey(): UUID
-    + getTargetType(): TargetType
-    + getDomainId(): UUID
-    + getRepoId(): Long
-    + getDomainName(): String
-    + getRepoFullName(): String
+    + getDomain(): String
+    + getScanTypes(): List<TargetType>
+    + getRequestedBy(): UUID
+    + getEnqueuedAt(): Instant
 }
 
 enum TargetType {
@@ -110,6 +103,7 @@ enum SurfaceType {
     SAST
     SECRETS
 }
+
 
 ' Findings table (matches ERD)
 class Finding {
@@ -356,7 +350,7 @@ Finding --> Severity : uses
 Finding --> FindingStatus : uses
 
 ScanResult --> SurfaceType : uses
-ScanJob --> TargetType : uses
+ScanJob "1" o-- "many" TargetType : contains
 Scanner --> TargetType : returns
 ScanOrchestrator --> TargetType : filters by
 
