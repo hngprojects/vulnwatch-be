@@ -20,6 +20,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     public static final String SCAN_JOB_CHANNEL = "scan-jobs";
+    public static final String SCAN_RESULTS_QUEUE = "scan-results";
 
     private final RedisConnectionFactory connectionFactory;
 
