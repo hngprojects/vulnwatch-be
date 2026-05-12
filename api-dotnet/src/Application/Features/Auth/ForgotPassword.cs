@@ -41,7 +41,7 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
         var encodedToken = WebUtility.UrlEncode(token);
 
         var frontendUrl = _config["FrontendUrl:path"];
-        var resetLink = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={encodedToken}";
+        var resetLink = $"{frontendUrl}/api/auth/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={encodedToken}";
 
         _logger.LogInformation("VERIFICATION LINK: {link}", resetLink);
 

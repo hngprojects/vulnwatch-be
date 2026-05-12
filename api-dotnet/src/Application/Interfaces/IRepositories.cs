@@ -6,15 +6,26 @@ using Domain.Entities;
 
 namespace Application.Interfaces;
 
+public interface IRepository<T> where T : class
+{
+    Task AddAsync(T entity, CancellationToken ct = default);
+    void Update(T entity);
+    void Remove(T entity);
+    Task SaveChangesAsync(CancellationToken ct = default);
+}
 
-public interface IRefreshTokenRepository
+public interface IRefreshTokenRepository : IRepository<RefreshToken>
 {
     Task<RefreshToken?> GetById(Guid id, CancellationToken ct = default);
-    Task Add(RefreshToken token, CancellationToken ct = default);
-    Task Update(RefreshToken token, CancellationToken ct = default);
-    Task Delete(RefreshToken token, CancellationToken ct = default);
-    Task SaveChanges(CancellationToken ct = default);
     Task<RefreshToken?> GetByToken(string rawToken, CancellationToken ct = default);
-    Task<IEnumerable<RefreshToken>> GetActiveByUserId(Guid userId, CancellationToken ct = default);
+    Task<List<RefreshToken>> GetActiveByUserId(Guid userId, CancellationToken ct = default);
 
+}
+
+public interface IScannedDomainRepository : IRepository<ScannedDomain>
+{
+    Task<ScannedDomain?> FindActive(string domain, CancellationToken ct);
+    Task<int> CountPending(Guid userId, CancellationToken ct);
+
+    Task<ScannedDomain?> FindPendingById(Guid domainId, Guid userId, CancellationToken ct);
 }

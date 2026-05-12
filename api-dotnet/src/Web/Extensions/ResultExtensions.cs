@@ -28,6 +28,7 @@ public static class ResultExtensions
                 ErrorCode.Validation => controller.BadRequest(result),
                 ErrorCode.Unauthorized => new ObjectResult(result) { StatusCode = StatusCodes.Status401Unauthorized },
                 ErrorCode.Forbidden => new ObjectResult(result) { StatusCode = StatusCodes.Status403Forbidden },
+                ErrorCode.RateLimited => new ObjectResult(result) { StatusCode = StatusCodes.Status429TooManyRequests },
                 _ => new ObjectResult(result) { StatusCode = StatusCodes.Status500InternalServerError },
             };
 }
