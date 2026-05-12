@@ -26,16 +26,16 @@ public class HttpParallelScanner {
 
   public ScanResponse scan(ScanJob job) {
     CompletableFuture<List<FindingResponse>> headerTask =
-        CompletableFuture.supplyAsync(() -> headerCheck.scan(job.getDomain()), executor);
+            CompletableFuture.supplyAsync(() -> safe(headerCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> exposureTask =
-        CompletableFuture.supplyAsync(() -> exposureCheck.scan(job.getDomain()), executor);
+            CompletableFuture.supplyAsync(() -> safe(exposureCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> adminTask =
-        CompletableFuture.supplyAsync(() -> adminPanelCheck.scan(job.getDomain()), executor);
+            CompletableFuture.supplyAsync(() -> safe(adminPanelCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> directoryTask =
-        CompletableFuture.supplyAsync(() -> directoryListingCheck.scan(job.getDomain()), executor);
+            CompletableFuture.supplyAsync(() -> safe(directoryListingCheck.scan(job.getDomain())), executor);
 
     CompletableFuture.allOf(headerTask, exposureTask, adminTask, directoryTask).join();
 
@@ -46,5 +46,13 @@ public class HttpParallelScanner {
     findings.addAll(directoryTask.join());
 
     return ScanResponse.builder().findings(findings).build();
+  }
+
+  private List<FindingResponse> safe(List<FindingResponse> findings) {
+    try {
+      return findings;
+    } catch (Exception e) {
+      return List.of(); // fail safe
+    }
   }
 }

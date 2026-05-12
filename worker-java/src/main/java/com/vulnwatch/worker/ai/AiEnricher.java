@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AiEnricher {
-//    public EnrichedScanResult enrich(AggregatedScanData aggregated) {
-//
-//    }
+    public EnrichedScanResult enrich(AggregatedScanData aggregated) {
+        return new EnrichedScanResult();
+    }
 }
