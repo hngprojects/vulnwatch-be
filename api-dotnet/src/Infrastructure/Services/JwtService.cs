@@ -14,7 +14,7 @@ namespace Infrastructure.Services;
 public class JwtService : IJwtService
 {
     private readonly IConfiguration _config;
- 
+
     public JwtService(IConfiguration config)
     {
         _config = config;
@@ -32,6 +32,8 @@ public class JwtService : IJwtService
         };
 
         var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(expireMinutes),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
@@ -39,7 +41,7 @@ public class JwtService : IJwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
- 
+
     public string GenerateRefreshTokenString()
     {
         var bytes = new byte[32];
@@ -53,44 +55,48 @@ public class JwtService : IJwtService
         var issuer = _config["Jwt:Issuer"]!;
         var audience = _config["Jwt:Audience"]!;
         var handler = new JwtSecurityTokenHandler();
- 
+
         var validationParams = new TokenValidationParameters
         {
-            ValidateIssuer           = true,
-            ValidIssuer              = issuer,
-            ValidateAudience         = true,
-            ValidAudience            = audience,
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey         = key,
-            ValidateLifetime         = true,
-            ClockSkew                = TimeSpan.FromSeconds(30)
+            IssuerSigningKey = key,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
         };
- 
+
         try
         {
             var principal = handler.ValidateToken(token, validationParams, out _);
- 
+
             var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
                          ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            var email  = principal.FindFirstValue(ClaimTypes.Email)
+            var email = principal.FindFirstValue(ClaimTypes.Email)
                          ?? principal.FindFirstValue(JwtRegisteredClaimNames.Email);
-            var role   = principal.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
- 
+            var role = principal.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+
             if (userId is null || email is null)
                 return Result<TokenClaims>.Failure(Error.Unauthorized("Token is invalid"));
- 
+
             return Result<TokenClaims>.Success(new TokenClaims(Guid.Parse(userId), email));
+        }
+        catch (SecurityTokenMalformedException)
+        {
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is malformed."));
         }
         catch (SecurityTokenExpiredException)
         {
-            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is expired"));
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token has expired."));
         }
         catch (SecurityTokenException)
         {
-            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is invalid"));
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is invalid."));
         }
     }
 }
 
 
-    
+

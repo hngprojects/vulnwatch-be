@@ -17,8 +17,53 @@ public class User : IdentityUser<Guid>
         UpdatedAt = DateTime.UtcNow
     };
 
+    public static User CreateFromGoogle(string email, string googleId) => new()
+    {
+        Id = Guid.NewGuid(),
+        Email = email,
+        UserName = email,
+        EmailConfirmed = true,
+        GoogleId = googleId,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
+
+    public bool LinkGoogleAccount(string googleId)
+    {
+        if (string.Equals(GoogleId, googleId, StringComparison.Ordinal))
+            return false;
+
+        GoogleId = googleId;
+        Touch();
+        return true;
+    }
+
+    public bool UpdateEmailAddress(string email)
+    {
+        if (string.Equals(Email, email, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(UserName, email, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        Email = email;
+        UserName = email;
+        Touch();
+        return true;
+    }
+
+    public bool ConfirmEmail()
+    {
+        if (EmailConfirmed)
+            return false;
+
+        EmailConfirmed = true;
+        Touch();
+        return true;
+    }
+
     public void Activate()
     {
-        UpdatedAt = DateTime.UtcNow;
+        Touch();
     }
+
+    private void Touch() => UpdatedAt = DateTime.UtcNow;
 }

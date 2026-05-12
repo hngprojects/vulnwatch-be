@@ -9,7 +9,7 @@ services:
       - postgres
       - redis
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=vulnwatch;Username=postgres;Password=password
+      - ConnectionStrings__DefaultConnectionString=Host=postgres;Port=5432;Database=vulnwatch;Username=postgres;Password=password
       - Redis__Configuration=redis:6379
       - ASPNETCORE_ENVIRONMENT=Development
 

@@ -2,28 +2,81 @@ using System.Net;
 using System.Net.Mail;
 using Application.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
 public class EmailService : IEmailService
 {
     private readonly IConfiguration _config;
+    private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IConfiguration config) => _config = config;
+    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    {
+        _config = config;
+        _logger = logger;
+    }
 
     public async Task SendAsync(string to, string subject, string body)
     {
-        var host = _config["SmtpCredentials:Host"]!;
-        var port = int.Parse(_config["SmtpCredentials:Port"]!);
-        var username = _config["SmtpCredentials:Username"]!;
-        var password = _config["SmtpCredentials:Password"]!;
+        SmtpCredentials? credentials;
 
-        using var client = new SmtpClient(host, port)
+        try
         {
-            Credentials = new NetworkCredential(username, password),
+            credentials = SmtpCredentials.Load(_config);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Email service is misconfigured. Email to {Recipient} was not sent.", to);
+            return;
+        }
+
+        using var client = new SmtpClient(credentials.Host, credentials.Port)
+        {
+            Credentials = new NetworkCredential(credentials.Username, credentials.Password),
             EnableSsl = true
         };
 
-        await client.SendMailAsync(new MailMessage(username, to, subject, body));
+        try
+        {
+            await client.SendMailAsync(new MailMessage(credentials.Username, to, subject, body));
+            _logger.LogInformation("Email sent to {Recipient} with subject '{Subject}'.", to, subject);
+            return;
+        }
+        catch (SmtpException ex)
+        {
+            _logger.LogError(ex, "SMTP failure while sending email to {Recipient}. Status: {StatusCode}.", to, ex.StatusCode);
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while sending email to {Recipient}.", to);
+            return;
+        }
+    }
+}
+
+internal sealed record SmtpCredentials(string Host, int Port, string Username, string Password)
+{
+    public static SmtpCredentials Load(IConfiguration config)
+    {
+        var host = config["SmtpCredentials:Host"];
+        var portRaw = config["SmtpCredentials:Port"];
+        var username = config["SmtpCredentials:Username"];
+        var password = config["SmtpCredentials:Password"];
+
+        if (string.IsNullOrWhiteSpace(host))
+            throw new InvalidOperationException("SMTP host is not configured.");
+
+        if (!int.TryParse(portRaw, out var port) || port is < 1 or > 65535)
+            throw new InvalidOperationException($"SMTP port '{portRaw}' is invalid.");
+
+        if (string.IsNullOrWhiteSpace(username))
+            throw new InvalidOperationException("SMTP username is not configured.");
+
+        if (string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("SMTP password is not configured.");
+
+        return new(host, port, username, password);
     }
 }
