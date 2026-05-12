@@ -32,6 +32,8 @@ public class JwtService : IJwtService
         };
 
         var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(expireMinutes),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
@@ -81,13 +83,17 @@ public class JwtService : IJwtService
 
             return Result<TokenClaims>.Success(new TokenClaims(Guid.Parse(userId), email));
         }
+        catch (SecurityTokenMalformedException)
+        {
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is malformed."));
+        }
         catch (SecurityTokenExpiredException)
         {
-            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is expired"));
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token has expired."));
         }
         catch (SecurityTokenException)
         {
-            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is invalid"));
+            return Result<TokenClaims>.Failure(Error.Unauthorized("Token is invalid."));
         }
     }
 }

@@ -21,6 +21,7 @@ using Web.Middleware;
 using Web.Services;
 using MediatR;
 using Application.Behaviours;
+using DnsClient;
 
 LoadDotEnv();
 
@@ -156,7 +157,7 @@ var redisConfig = builder.Configuration.GetValue<string>("Redis:Configuration") 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var config = ConfigurationOptions.Parse(redisConfig);
-    config.AbortOnConnectFail = false;    
+    config.AbortOnConnectFail = false;
     return ConnectionMultiplexer.Connect(config);
 });
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
@@ -169,8 +170,12 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IScannedDomainRepository, ScannedDomainRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<ILookupClient>(new LookupClient());
+builder.Services.AddScoped<IDnsResolver, DnsResolver>();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(
