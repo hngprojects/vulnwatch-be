@@ -35,7 +35,7 @@ public class SslScanner{
         //initialize Ssl result
         SslResult result = new SslResult();
 
-        String domain = job.getDomainName();
+        String domain = job.getDomain();
 
         //initialize scan result
         ScanResult scanResult = new ScanResult();
