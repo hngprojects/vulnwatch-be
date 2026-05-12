@@ -1,0 +1,39 @@
+using Application.Features.Auth;
+using Application.Features.Auth.DTOs;
+using Application.Features.Domain;
+using Application.Features.Domain.DTOs;
+using Domain.Common;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Web.Extensions;
+
+namespace Web.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class DomainsController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public DomainsController(IMediator mediator) => _mediator = mediator;
+
+    [HttpPost]
+    [Authorize]
+    public async Task<ActionResult<Result<RegisterDomainResponse>>> Register(RegisterDomainRequest request)
+    {
+        var result = await _mediator.Send(new RegisterDomainCommand(request.Domain));
+        return result.ToHttpResponse(this);
+    }
+
+    [Authorize]
+    [HttpPut("{id:guid}/verify")]
+    public async Task<ActionResult<Result<VerifyDomainResponse>>> Verify(
+        Guid id,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(new VerifyDomainCommand(id), ct);
+        return result.ToHttpResponse(this);
+    }
+
+}

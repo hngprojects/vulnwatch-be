@@ -9,6 +9,7 @@ using Domain.Common;
 using Microsoft.AspNetCore.Authorization.Policy;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Web.Extensions;
 
@@ -39,7 +40,7 @@ public class AuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
         {
             error = context.Items.TryGetValue("AuthError", out var stored) && stored is Error authErr
                          ? authErr
-                         : Error.Unauthorized("No valid token");
+                         : Error.Unauthorized("No valid token.");
             statusCode = HttpStatusCode.Unauthorized;
         }
         else
@@ -56,10 +57,12 @@ public class AuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
         context.Response.StatusCode = (int)statusCode;
         context.Response.ContentType = "application/json";
 
-        var body = JsonSerializer.Serialize(new
+        var result = Result<object>.Failure(error);
+
+        var body = JsonSerializer.Serialize(result, new JsonSerializerOptions
         {
-            code = error.Code,
-            message = error.Message
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
         });
 
         await context.Response.WriteAsync(body);
