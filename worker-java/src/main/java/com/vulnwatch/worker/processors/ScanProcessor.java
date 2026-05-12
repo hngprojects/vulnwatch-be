@@ -167,7 +167,9 @@ public class ScanProcessor {
     }
 
     private void publishCompletion(UUID scanId, EnrichedScanResult enriched) {
-        resultPublisher.publishCompletion(scanId, ScanStatus.COMPLETED, enriched.getSecurityScore());
+        resultPublisher.publishCompletion(scanId, ScanStatus.COMPLETED,
+                enriched.getSecurityScore(),
+                enriched.getFindings().size());
     }
 
     @Transactional
