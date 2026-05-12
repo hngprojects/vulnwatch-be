@@ -1,7 +1,10 @@
 package com.vulnwatch.worker.models;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.vulnwatch.worker.dto.FindingResponse;
 import lombok.Data;
 
 /**
