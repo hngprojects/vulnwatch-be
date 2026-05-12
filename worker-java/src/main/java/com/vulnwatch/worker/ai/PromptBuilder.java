@@ -1,0 +1,90 @@
+package com.vulnwatch.worker.ai;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vulnwatch.worker.models.AggregatedScanData;
+import com.vulnwatch.worker.models.ScanResult;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Builds the AI prompt by converting raw scan data to JSON and injecting role instructions.
+ *
+ * <p>This component has NO external dependencies (no Redis, no Database, no HTTP).
+ * It is purely a data transformer, making it easily unit testable.
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PromptBuilder {
+
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Builds the complete user instruction for OpenAI.
+     *
+     * @param aggregatedData Raw results from all scanners
+     * @return Formatted prompt string with role instruction and scan data
+     */
+    public String buildPrompt(AggregatedScanData aggregatedData) {
+        String scanDataJson = convertScanDataToJson(aggregatedData);
+        return String.format(PROMPT_TEMPLATE, scanDataJson);
+    }
+
+    /**
+     * Converts aggregated scan results to JSON format for AI consumption.
+     * Groups results by surface type (DNS, SSL, HTTP_HEADERS, etc.)
+     *
+     * @param aggregatedData Raw results from all scanners
+     * @return JSON string representation of scan data
+     */
+    public String convertScanDataToJson(AggregatedScanData aggregatedData) {
+        Map<String, Object> scanResults = aggregatedData.getSuccessfulResults().stream()
+                .collect(Collectors.toMap(
+                        r -> r.getSurface().name().toLowerCase(),
+                        ScanResult::getRawData,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+
+        try {
+            return objectMapper.writeValueAsString(scanResults);
+        } catch (Exception e) {
+            log.error("Failed to convert scan data to JSON", e);
+            return "{}";
+        }
+    }
+
+    /**
+     * System prompt template instructing AI to act as security expert.
+     * The %s placeholder is replaced with the actual scan data JSON.
+     */
+    private static final String PROMPT_TEMPLATE = """
+            You are VulnWatch AI, a world-class security expert for developers and business owners.
+
+            ## YOUR ROLE
+            Act as a senior security analyst. Translate technical scan results into clear,
+            actionable security intelligence.
+
+            ## CRITICAL: ENUM VALUE REQUIREMENTS
+            The 'severity' field MUST be exactly one of: Critical, High, Medium, Low
+            The 'surface' field MUST be exactly one of: DNS, SSL, HTTP_HEADERS, CT_LOG, EXPOSURE, DEPENDENCY, SAST, SECRETS
+
+            ## SCORING GUIDELINES
+            - Critical (100-80): Take immediate action - exposed secrets, exploitable vulnerabilities
+            - High (79-60): Address soon - missing critical security headers, expiring certificates
+            - Medium (59-40): Plan to fix - missing security best practices
+            - Low (39-0): Informational - minor improvements
+
+            ## SCAN DATA TO ANALYZE
+            %s
+
+            ## RESPONSE REQUIREMENTS
+            Return findings as a JSON object matching the specified schema.
+            Do not include any text outside the JSON response.
+            """;
+}
