@@ -52,16 +52,16 @@ public class AiEnricher {
 
             var aiResponse = responseParser.callOpenAi(prompt);
             log.debug("Received AI response for scan: {}, findings: {}",
-                    scanId, aiResponse.findings().size());
+                    scanId, aiResponse.getFindings().size());
 
 
             List<Finding> findings = findingsConverter.convertToFindings(scanId,
-                    aiResponse.findings());
+                    aiResponse.getFindings());
             log.debug("Converted {} findings for scan: {}", findings.size(), scanId);
 
             int securityScore = scoreCalculator.calculateFinalScore(
-                    aiResponse.securityScore(),
-                    aiResponse.findings()
+                    aiResponse.getSecurityScore(),
+                    aiResponse.getFindings()
             );
 
             log.info("AI enrichment completed for scan: {} - score: {}, findings: {}",
