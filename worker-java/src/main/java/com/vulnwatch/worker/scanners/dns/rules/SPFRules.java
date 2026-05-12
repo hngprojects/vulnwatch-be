@@ -2,11 +2,13 @@ package com.vulnwatch.worker.scanners.dns.rules;
 
 import com.vulnwatch.worker.scanners.dns.models.Finding;
 import com.vulnwatch.worker.scanners.dns.models.ScanContext;
+import org.springframework.stereotype.Component;
 import org.xbill.DNS.TXTRecord;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class SPFRules implements Rule{
     @Override
     public List<Finding> evaluate(ScanContext context) {

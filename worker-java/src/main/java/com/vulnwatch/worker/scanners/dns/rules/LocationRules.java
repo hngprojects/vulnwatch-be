@@ -3,6 +3,7 @@ package com.vulnwatch.worker.scanners.dns.rules;
 import com.vulnwatch.worker.scanners.dns.models.Finding;
 import com.vulnwatch.worker.scanners.dns.models.IpMetadata;
 import com.vulnwatch.worker.scanners.dns.models.ScanContext;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Component
 public class LocationRules implements Rule{
 
     @Override
@@ -23,22 +25,22 @@ public class LocationRules implements Rule{
             }
         });
 
-        Set<String> orgs = context.ipMetadataList()
+        Set<String> countries = context.ipMetadataList()
                 .stream()
-                .map(IpMetadata::org)
+                .map(IpMetadata::country)
                 .collect(Collectors.toSet());
 
-        if (orgs.size() > 1) {
+        if (countries.size() > 1) {
             findings.add(Finding.info(
                     "MULTIPLE_LOCATION_ASSOCIATION",
-                    "IP addresses resolve to multiple country locations: " + orgs
+                    "IP addresses resolve to multiple country locations: " + countries
             ));
         }
 
-        if (orgs.size() > 1) {
+        if (countries.size() == 1) {
             findings.add(Finding.info(
                     "SINGLE_LOCATION_ASSOCIATION",
-                    "IP addresses resolve to a single country location: " + orgs
+                    "IP addresses resolve to a single country location: " + countries
             ));
         }
 

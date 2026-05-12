@@ -20,6 +20,9 @@ public class RedisJobConsumer implements MessageListener {
     try {
       ScanJob job = objectMapper.readValue(message.getBody(), ScanJob.class);
       scanProcessor.process(job);
+
+
+
     } catch (Exception e) {
       System.err.println("Failed to process scan job: " + e.getMessage());
     }

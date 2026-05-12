@@ -19,7 +19,7 @@ public class DnsResolverTest {
 
     @Test
     public void shouldReturnFullScanContext() throws IOException {
-        String domain = "jumia.com";
+        String domain = "nileuniversity.edu.ng";
 
         ScanContext scanContext = dnsResolver.resolveRecords(domain).join();
 

@@ -2,12 +2,14 @@ package com.vulnwatch.worker.scanners.dns.rules;
 
 import com.vulnwatch.worker.scanners.dns.models.Finding;
 import com.vulnwatch.worker.scanners.dns.models.ScanContext;
+import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class IpRules implements Rule{
 
     @Override
@@ -17,7 +19,6 @@ public class IpRules implements Rule{
 
        if(context.aRecordList().isEmpty()){
            findings.add(Finding.medium("MISSING_IPV4", "DNS lookup returned no IPv4 addresses"));
-
        }
 
        if(context.aaaaRecordList().isEmpty()){
@@ -44,6 +45,7 @@ public class IpRules implements Rule{
                         "A record resolves to internal IPv6 address: " + ip
                 ));
             }
+
         });
 
         return findings;

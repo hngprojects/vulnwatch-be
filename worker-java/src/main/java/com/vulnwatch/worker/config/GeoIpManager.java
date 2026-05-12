@@ -13,19 +13,26 @@ import java.util.concurrent.atomic.AtomicReference;
 @Configuration
 public class GeoIpManager {
 
-    private final AtomicReference<DatabaseReader> readerRef =
+    private final AtomicReference<DatabaseReader> readerRefAsn =
+            new AtomicReference<>();
+    private final AtomicReference<DatabaseReader> readerRefCountry =
             new AtomicReference<>();
 
     @PostConstruct
     public void init() throws IOException {
-        reloadDatabase();
+        reloadAsnDatabase();
+        reloadCountryDatabase();
     }
 
-    public DatabaseReader reader() {
-        return readerRef.get();
+    public DatabaseReader asnReader() {
+        return readerRefAsn.get();
     }
 
-    public void reloadDatabase() throws IOException {
+    public DatabaseReader countryReader() {
+        return readerRefCountry.get();
+    }
+
+    public void reloadAsnDatabase() throws IOException {
 
         File dbFile = new File("/Users/mitchelntuen/Downloads/GeoLite2-ASN_20260511/GeoLite2-ASN.mmdb");
 
@@ -34,20 +41,46 @@ public class GeoIpManager {
                         .withCache(new CHMCache())
                         .build();
 
-        DatabaseReader oldReader = readerRef.getAndSet(newReader);
+        DatabaseReader oldReader = readerRefAsn.getAndSet(newReader);
 
         if (oldReader != null) {
             oldReader.close();
         }
     }
 
+    public void reloadCountryDatabase() throws IOException {
+
+        File dbFile = new File("/Users/mitchelntuen/Downloads/GeoLite2-Country_20260508/GeoLite2-Country.mmdb");
+
+        DatabaseReader newReader =
+                new DatabaseReader.Builder(dbFile)
+                        .withCache(new CHMCache())
+                        .build();
+
+        DatabaseReader oldReader = readerRefCountry.getAndSet(newReader);
+
+        if (oldReader != null) {
+            oldReader.close();
+        }
+    }
+
+
     @PreDestroy
     public void shutdown() {
-        DatabaseReader reader = readerRef.getAndSet(null);
-        if (reader != null) {
+        DatabaseReader readerAsn = readerRefAsn.getAndSet(null);
+        if (readerAsn != null) {
             try {
-                reader.close();
+                readerAsn.close();
+            } catch (IOException ignored) {}
+        }
+
+        DatabaseReader readerCountry = readerRefCountry.getAndSet(null);
+        if (readerCountry != null) {
+            try {
+                readerCountry.close();
             } catch (IOException ignored) {}
         }
     }
+
+
 }

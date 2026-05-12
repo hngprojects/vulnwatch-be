@@ -15,7 +15,8 @@ public class MmdbReloadScheduler {
     public void reloadWeekly() {
 
         try {
-            geoIpManager.reloadDatabase();
+            geoIpManager.reloadCountryDatabase();
+            geoIpManager.reloadAsnDatabase();
             System.out.println("MMDB reloaded");
 
         } catch (Exception e) {

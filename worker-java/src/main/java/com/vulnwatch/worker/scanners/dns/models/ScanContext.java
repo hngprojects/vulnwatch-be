@@ -20,7 +20,7 @@ public record ScanContext (
         List<SOARecord> soaRecordList,
         List<IpMetadata> ipMetadataList,
         List<TXTRecord> dmarcList,
-        Map<Integer, String> dnssecMap
+        Map<String, String> dnssecMap
 
 
 ){

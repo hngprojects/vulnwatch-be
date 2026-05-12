@@ -21,8 +21,8 @@ public class AsnLookupService {
 
     public IpMetadata lookup(InetAddress addr) throws IOException {
         try {
-            AsnResponse response = geoIpManager.reader().asn(addr);
-            CountryResponse countryResponse = geoIpManager.reader().country(addr);
+            AsnResponse response = geoIpManager.asnReader().asn(addr);
+            CountryResponse countryResponse = geoIpManager.countryReader().country(addr);
 
 
             return new IpMetadata(

@@ -2,12 +2,15 @@ package com.vulnwatch.worker.scanners.dns.rules;
 
 import com.vulnwatch.worker.scanners.dns.models.Finding;
 import com.vulnwatch.worker.scanners.dns.models.ScanContext;
+import org.springframework.stereotype.Component;
 import org.xbill.DNS.TXTRecord;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class TxtLeakageRules implements Rule {
+
     @Override
     public List<Finding> evaluate(ScanContext context) {
         List<Finding> findings = new ArrayList<>();
@@ -15,13 +18,6 @@ public class TxtLeakageRules implements Rule {
         for (TXTRecord r : context.txtRecordList()) {
             String txt = String.join("", r.getStrings());
 
-
-            if (txt.contains("verify") || txt.contains("verification")) {
-                findings.add(Finding.low(
-                        "TXT_VERIFICATION_TOKEN",
-                        "Verification token exposed in DNS"
-                ));
-            }
 
             if (txt.contains("staging") || txt.contains("dev") || txt.contains("test")) {
                 findings.add(Finding.medium(

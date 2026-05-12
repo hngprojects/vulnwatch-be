@@ -98,12 +98,12 @@ public class DnsResolver {
 
 
 
-        Map<Integer, String> dnssecMap = new HashMap<>();
-        dnssecMap.put(Type.A, checkDnssec(a));
-        dnssecMap.put(Type.AAAA, checkDnssec(aaaa));
-        dnssecMap.put(Type.MX, checkDnssec(mx));
-        dnssecMap.put(Type.TXT, checkDnssec(txt));
-        dnssecMap.put(Type.CNAME, checkDnssec(cname));
+        Map<String, String> dnssecMap = new HashMap<>();
+        dnssecMap.put("typeA", checkDnssec(a));
+        dnssecMap.put("typeAAAA", checkDnssec(aaaa));
+        dnssecMap.put("typeMX", checkDnssec(mx));
+        dnssecMap.put("typeTXT", checkDnssec(txt));
+        dnssecMap.put("typeCNAME", checkDnssec(cname));
 
         return ScanContext.builder()
                 .aRecordList(aRecordList)
