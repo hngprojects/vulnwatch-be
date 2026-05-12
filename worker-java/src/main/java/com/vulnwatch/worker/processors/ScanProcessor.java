@@ -1,7 +1,8 @@
 package com.vulnwatch.worker.processors;
 
 import com.vulnwatch.worker.ai.AiEnricher;
-import com.vulnwatch.worker.entity.Scan;
+import com.vulnwatch.worker.entity.Finding;
+import com.vulnwatch.worker.enums.ScanStatus;
 import com.vulnwatch.worker.enums.SurfaceType;
 import com.vulnwatch.worker.interfaces.Scanner;
 import com.vulnwatch.worker.models.*;
@@ -33,10 +34,8 @@ public class ScanProcessor {
     private final ScanRepository scanRepository;
     private final FindingRepository findingRepository;
     private final RedisResultPublisher resultPublisher;
-    private final ExecutorService executor;           // application-level executor (recommended)
+    private final ExecutorService executor;
     private final Clock clock;
-
-    // Injected for testability
 
     @Value("${scan.timeout:30}")
     private static final int SCANNER_TIMEOUT_SECONDS = 30;
@@ -82,7 +81,7 @@ public class ScanProcessor {
             log.info("Scan {} marked as RUNNING", scanId);
         }, () -> {
             log.error("Could not find scan with ID {} to mark as RUNNING", scanId);
-            // Optional: throw a custom exception if this is a critical state error
+
         });
     }
 
@@ -145,20 +144,56 @@ public class ScanProcessor {
         }
     }
 
-    private void persistResults(UUID scanId, EnrichedScanResult enriched) {
-//        scanRepository.markCompleted(scanId, enriched.getSecurityScore(), now());
-//        findingRepository.saveAll(enriched.getFindings());
+    @Transactional
+    protected void persistResults(UUID scanId, EnrichedScanResult enriched) {
+        log.info("Persisting results for scanId: {} with score: {}", scanId, enriched.getSecurityScore());
 
+        scanRepository.findById(scanId).ifPresentOrElse(scan -> {
+            scan.markCompleted(enriched.getSecurityScore());
+            scanRepository.save(scan);
+        }, () -> {
+            log.error("Failed to persist results: Scan {} not found in database", scanId);
+            return;
+        });
+
+
+        List<Finding> findings = enriched.getFindings();
+        if (findings != null && !findings.isEmpty()) {
+
+            findings.forEach(f -> f.setScanId(scanId));
+            findingRepository.saveAll(findings);
+            log.info("Saved {} findings for scanId: {}", findings.size(), scanId);
+        }
     }
 
     private void publishCompletion(UUID scanId, EnrichedScanResult enriched) {
-        resultPublisher.publishCompletion(scanId, "COMPLETED", enriched.getSecurityScore());
+        resultPublisher.publishCompletion(scanId, ScanStatus.COMPLETED, enriched.getSecurityScore());
     }
 
+    @Transactional
     private void handleScanFailure(UUID scanId, Exception e) {
-//        log.error("Scan failed: scanId={}", scanId, e);
-//        scanRepository.markFailed(scanId, now());
-//        resultPublisher.publishFailure(scanId, e.getMessage());
+        log.error("Scan execution failed for scanId: {}. Error: {}", scanId, e.getMessage(), e);
+
+        try {
+
+            scanRepository.findById(scanId).ifPresentOrElse(scan -> {
+                scan.markFailed();
+                scanRepository.save(scan);
+                log.info("Scan {} marked as FAILED in database", scanId);
+            }, () -> {
+                log.warn("Scan {} not found in database; skipping DB update.", scanId);
+            });
+
+
+            String errorMessage = (e.getMessage() != null) ? e.getMessage() : "Internal Worker Error";
+            resultPublisher.publishFailure(scanId, errorMessage);
+
+            log.info("Successfully published failure notification for scanId: {}", scanId);
+
+        } catch (Exception secondaryException) {
+            log.error("CRITICAL: Failed to record scan failure for scanId: {}. Secondary error: {}",
+                    scanId, secondaryException.getMessage());
+        }
     }
 
     private Instant now() {
