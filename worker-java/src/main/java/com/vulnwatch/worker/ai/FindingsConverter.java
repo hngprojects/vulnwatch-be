@@ -104,7 +104,7 @@ public class FindingsConverter {
         try {
             return SurfaceType.fromString(surfaceStr);
         } catch (InvalidSurfaceTypeException e) {
-            return null;
+            return SurfaceType.INFO;
         }
     }
 

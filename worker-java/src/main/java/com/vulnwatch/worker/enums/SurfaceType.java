@@ -22,7 +22,10 @@ public enum SurfaceType {
     DEPENDENCY,
 
     @Schema(description = "Hardcoded secrets and credentials")
-    SECRETS;
+    SECRETS,
+
+    @Schema(description = "Fallback for AI failure")
+    INFO;
 
     /**
      * Converts a string to SurfaceType regardless of case.
