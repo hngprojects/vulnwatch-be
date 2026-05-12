@@ -51,8 +51,10 @@ public class AiEnricher {
             log.debug("Built prompt for scan: {}, length: {}", scanId, prompt.length());
 
             var aiResponse = responseParser.callOpenAi(prompt);
-            log.debug("Received AI response for scan: {}, findings: {}",
-                    scanId, aiResponse.getFindings().size());
+
+            var aiFindings = aiResponse.getFindings();
+            int findingsCount = (aiFindings == null) ? 0 : aiFindings.size();
+            log.debug("Received AI response for scan: {}, findings: {}", scanId, findingsCount);
 
 
             List<Finding> findings = findingsConverter.convertToFindings(scanId,
