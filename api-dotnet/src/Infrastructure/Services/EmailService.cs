@@ -60,8 +60,8 @@ internal sealed record SmtpCredentials(string Host, int Port, string Username, s
 {
     public static SmtpCredentials Load(IConfiguration config)
     {
-        var host     = config["SmtpCredentials:Host"];
-        var portRaw  = config["SmtpCredentials:Port"];
+        var host = config["SmtpCredentials:Host"];
+        var portRaw = config["SmtpCredentials:Port"];
         var username = config["SmtpCredentials:Username"];
         var password = config["SmtpCredentials:Password"];
 

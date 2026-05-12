@@ -36,8 +36,8 @@ public class SessionService : ISessionService
         var accessExpiry = DateTime.UtcNow.AddMinutes(_config.AccessTokenExpiryMinutes);
 
         var refreshToken = RefreshToken.Create(user.Id, refreshStr, expiresAt, ipAddress);
-        await _tokenRepo.Add(refreshToken, ct);
-        await _tokenRepo.SaveChanges(ct);
+        await _tokenRepo.AddAsync(refreshToken, ct);
+        await _tokenRepo.SaveChangesAsync(ct);
 
         return Result<AuthTokens>.Success(new AuthTokens(accessToken, refreshStr, accessExpiry));
     }
@@ -58,7 +58,7 @@ public class SessionService : ISessionService
 
         stored.Revoke();
 
-        await _tokenRepo.SaveChanges(ct);
+        await _tokenRepo.SaveChangesAsync(ct);
 
         var user = await _userManager.FindByIdAsync(stored.UserId.ToString());
 
@@ -79,7 +79,7 @@ public class SessionService : ISessionService
             return Result<bool>.Success(true);
 
         stored.Revoke();
-        await _tokenRepo.SaveChanges(ct);
+        await _tokenRepo.SaveChangesAsync(ct);
 
         return Result<bool>.Success(true);
     }
@@ -91,7 +91,7 @@ public class SessionService : ISessionService
         foreach (var token in activeTokens)
             token.Revoke();
 
-        await _tokenRepo.SaveChanges(ct);
+        await _tokenRepo.SaveChangesAsync(ct);
 
         return Result<bool>.Success(true);
     }

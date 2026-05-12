@@ -11,6 +11,8 @@ namespace Domain.Common;
 /// </summary>
 public record Error(ErrorCode Code, string Message)
 {
+    /// <summary>429 — the caller has exceeded an allowed quota or rate limit.</summary>
+    public static Error RateLimited(string message) => new(ErrorCode.RateLimited, message);
     /// <summary>404 — the requested resource does not exist.</summary>
     public static Error NotFound(string message) => new(ErrorCode.NotFound, message);
 

@@ -40,7 +40,9 @@ public class ScanProcessor {
   @Value("${scan.timeout:30}")
   private static final int SCANNER_TIMEOUT_SECONDS = 30;
 
-  /** Main entry point - follows Single Responsibility + clear orchestration flow. */
+  /**
+   * Main entry point - follows Single Responsibility + clear orchestration flow.
+   */
   public void process(ScanJob job) {
     UUID scanId = job.getScanId();
     log.info("Processing scan job: scanId={}, targetTypes={}", scanId, job.getScanTypes());
@@ -48,8 +50,7 @@ public class ScanProcessor {
     try {
       markScanRunning(scanId);
 
-      List<Scanner> eligibleScanners =
-          scannerFilter.filterByAnyTargetType(scanners, job.getScanTypes());
+      List<Scanner> eligibleScanners = scannerFilter.filterByAnyTargetType(scanners, job.getScanTypes());
       log.info("Found {} eligible scanners for scan {}", eligibleScanners.size(), scanId);
 
       List<ScanResult> rawResults = executeScanners(eligibleScanners, job);
@@ -128,11 +129,10 @@ public class ScanProcessor {
   private AggregatedScanData aggregateResults(UUID scanId, ScanJob job, List<ScanResult> results) {
     List<ScanResult> successes = results.stream().filter(ScanResult::isSuccess).toList();
 
-    List<FailureInfo> failures =
-        results.stream()
-            .filter(r -> !r.isSuccess())
-            .map(r -> new FailureInfo(r.getScannerName(), r.getSurface(), r.getErrorMessage()))
-            .toList();
+    List<FailureInfo> failures = results.stream()
+        .filter(r -> !r.isSuccess())
+        .map(r -> new FailureInfo(r.getScannerName(), r.getSurface(), r.getErrorMessage()))
+        .toList();
 
     return AggregatedScanData.builder()
         .scanId(scanId)
@@ -181,23 +181,72 @@ public class ScanProcessor {
     resultPublisher.publishCompletion(scanId, ScanStatus.COMPLETED, enriched.getSecurityScore());
   }
 
+  private AggregatedScanData aggregateResults(UUID scanId, ScanJob job, List<ScanResult> results) {
+    List<ScanResult> successes = results.stream()
+        .filter(ScanResult::isSuccess)
+        .toList();
+
+    List<FailureInfo> failures = results.stream()
+        .filter(r -> !r.isSuccess())
+        .map(r -> new FailureInfo(r.getScannerName(), r.getSurface(), r.getErrorMessage()))
+        .toList();
+
+    return AggregatedScanData.builder()
+        .scanId(scanId)
+        .scanJob(job)
+        .successfulResults(successes)
+        .failures(failures)
+        .build();
+  }
+
+  private void logFailures(AggregatedScanData aggregated) {
+    if (!aggregated.getFailedSurfaces().isEmpty()) {
+      log.warn("Scan {} had failures on surfaces: {}",
+          aggregated.getScanId(), aggregated.getFailedSurfaces());
+    }
+  }
+
+  @Transactional
+  protected void persistResults(UUID scanId, EnrichedScanResult enriched) {
+    log.info("Persisting results for scanId: {} with score: {}", scanId, enriched.getSecurityScore());
+
+    scanRepository.findById(scanId).ifPresentOrElse(scan -> {
+      scan.markCompleted(enriched.getSecurityScore());
+      scanRepository.save(scan);
+    }, () -> {
+      log.error("Failed to persist results: Scan {} not found in database", scanId);
+      return;
+    });
+
+    List<Finding> findings = enriched.getFindings();
+    if (findings != null && !findings.isEmpty()) {
+
+      findings.forEach(f -> f.setScanId(scanId));
+      findingRepository.saveAll(findings);
+      log.info("Saved {} findings for scanId: {}", findings.size(), scanId);
+    }
+  }
+
+  private void publishCompletion(UUID scanId, EnrichedScanResult enriched) {
+    resultPublisher.publishCompletion(scanId, ScanStatus.COMPLETED,
+        enriched.getSecurityScore(),
+        enriched.getFindings().size());
+  }
+
   @Transactional
   private void handleScanFailure(UUID scanId, Exception e) {
     log.error("Scan execution failed for scanId: {}. Error: {}", scanId, e.getMessage(), e);
 
     try {
 
-      scanRepository
-          .findById(scanId)
-          .ifPresentOrElse(
-              scan -> {
-                scan.markFailed();
-                scanRepository.save(scan);
-                log.info("Scan {} marked as FAILED in database", scanId);
-              },
-              () -> {
-                log.warn("Scan {} not found in database; skipping DB update.", scanId);
-              });
+      scanRepository.findById(scanId).ifPresentOrElse(scan -> {
+        scan.markFailed();
+        scanRepository.save(scan);
+        log.info("Scan {} marked as FAILED in database", scanId);
+      },
+          () -> {
+            log.warn("Scan {} not found in database; skipping DB update.", scanId);
+          });
 
       String errorMessage = (e.getMessage() != null) ? e.getMessage() : "Internal Worker Error";
       resultPublisher.publishFailure(scanId, errorMessage);
