@@ -1,4 +1,3 @@
 package com.vulnwatch.worker.models.ai;
 
-public class AiResponse {
-}
+public class AiResponse {}

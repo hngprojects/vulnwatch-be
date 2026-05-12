@@ -4,17 +4,14 @@ import com.vulnwatch.worker.enums.ScanStatus;
 import com.vulnwatch.worker.enums.TargetType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/**
- * Scan entity - matches the 'scans' table in PostgreSQL.
- */
+/** Scan entity - matches the 'scans' table in PostgreSQL. */
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,66 +21,65 @@ import java.util.UUID;
 @Schema(description = "Scan entity - matches the 'scans' table in PostgreSQL")
 public class Scan {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Schema(description = "Primary key", example = "550e8400-e29b-41d4-a716-446655440000")
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Schema(description = "Primary key", example = "550e8400-e29b-41d4-a716-446655440000")
+  private UUID id;
 
-    @Column(nullable = false)
-    @Schema(description = "ID of the user who requested the scan")
-    private UUID userId;
+  @Column(nullable = false)
+  @Schema(description = "ID of the user who requested the scan")
+  private UUID userId;
 
-    @Column(unique = true, nullable = false)
-    @Schema(description = "Idempotency key to prevent duplicate processing")
-    private UUID idempotencyKey;
+  @Column(unique = true, nullable = false)
+  @Schema(description = "Idempotency key to prevent duplicate processing")
+  private UUID idempotencyKey;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Schema(description = "Type of target scanned", example = "DOMAIN")
-    private TargetType targetType;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Schema(description = "Type of target scanned", example = "DOMAIN")
+  private TargetType targetType;
 
-    @Schema(description = "Domain ID (if targetType=DOMAIN)")
-    private UUID domainId;
+  @Schema(description = "Domain ID (if targetType=DOMAIN)")
+  private UUID domainId;
 
-    @Schema(description = "Repository ID (if targetType=REPOSITORY)")
-    private Long repoId;
+  @Schema(description = "Repository ID (if targetType=REPOSITORY)")
+  private Long repoId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Schema(description = "Scan status", example = "QUEUED")
-    private ScanStatus status;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Schema(description = "Scan status", example = "QUEUED")
+  private ScanStatus status;
 
-    @Schema(description = "Security score 0-100", minimum = "0", maximum = "100")
-    private Integer securityScore;
+  @Schema(description = "Security score 0-100", minimum = "0", maximum = "100")
+  private Integer securityScore;
 
-    @Schema(description = "When the scan started")
-    private Instant startedAt;
+  @Schema(description = "When the scan started")
+  private Instant startedAt;
 
-    @Schema(description = "When the scan completed")
-    private Instant completedAt;
+  @Schema(description = "When the scan completed")
+  private Instant completedAt;
 
+  public void markRunning() {
+    this.status = ScanStatus.RUNNING;
+    this.startedAt = Instant.now();
+  }
 
-    public void markRunning() {
-        this.status = ScanStatus.RUNNING;
-        this.startedAt = Instant.now();
-    }
+  public void markCompleted(int score) {
+    this.status = ScanStatus.COMPLETED;
+    this.securityScore = score;
+    this.completedAt = Instant.now();
+  }
 
-    public void markCompleted(int score) {
-        this.status = ScanStatus.COMPLETED;
-        this.securityScore = score;
-        this.completedAt = Instant.now();
-    }
+  public void markFailed() {
+    this.status = ScanStatus.FAILED;
+    this.completedAt = Instant.now();
+  }
 
-    public void markFailed() {
-        this.status = ScanStatus.FAILED;
-        this.completedAt = Instant.now();
-    }
+  public boolean isDomainScan() {
+    return targetType == TargetType.DOMAIN;
+  }
 
-    public boolean isDomainScan() {
-        return targetType == TargetType.DOMAIN;
-    }
-
-    public boolean isRepositoryScan() {
-        return targetType == TargetType.REPOSITORY;
-    }
+  public boolean isRepositoryScan() {
+    return targetType == TargetType.REPOSITORY;
+  }
 }

@@ -5,23 +5,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+/** ASN and Country Database reload scheduler */
 @Service
 @RequiredArgsConstructor
 public class MmdbReloadScheduler {
 
-    private final GeoIpManager geoIpManager;
+  private final GeoIpManager geoIpManager;
 
-    @Scheduled(cron = "0 0 3 * * SUN")
-    public void reloadWeekly() {
+  /** Scheduled job to reload the databases by 3AM every Sunday */
+  @Scheduled(cron = "0 0 3 * * SUN")
+  public void reloadWeekly() {
 
-        try {
-            geoIpManager.reloadCountryDatabase();
-            geoIpManager.reloadAsnDatabase();
-            System.out.println("MMDB reloaded");
+    try {
+      geoIpManager.reloadCountryDatabase();
+      geoIpManager.reloadAsnDatabase();
+      System.out.println("MMDB reloaded");
 
-        } catch (Exception e) {
-            System.err.println("Failed to reload MMDB");
-            e.printStackTrace();
-        }
+    } catch (Exception e) {
+      System.err.println("Failed to reload MMDB");
+      e.printStackTrace();
     }
+  }
 }
