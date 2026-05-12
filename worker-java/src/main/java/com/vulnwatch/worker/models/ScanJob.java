@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Data;
 
 /**
  * ScanJob model - matches the JSON payload from C# API.

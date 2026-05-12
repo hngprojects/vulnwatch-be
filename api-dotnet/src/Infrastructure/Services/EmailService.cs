@@ -39,7 +39,13 @@ public class EmailService : IEmailService
 
         try
         {
-            await client.SendMailAsync(new MailMessage(credentials.Username, to, subject, body));
+            var mail = new MailMessage(credentials.Username, to, subject, body)
+            {
+                IsBodyHtml = true
+            };
+
+            await client.SendMailAsync(mail);
+
             _logger.LogInformation("Email sent to {Recipient} with subject '{Subject}'.", to, subject);
             return;
         }
@@ -60,8 +66,8 @@ internal sealed record SmtpCredentials(string Host, int Port, string Username, s
 {
     public static SmtpCredentials Load(IConfiguration config)
     {
-        var host     = config["SmtpCredentials:Host"];
-        var portRaw  = config["SmtpCredentials:Port"];
+        var host = config["SmtpCredentials:Host"];
+        var portRaw = config["SmtpCredentials:Port"];
         var username = config["SmtpCredentials:Username"];
         var password = config["SmtpCredentials:Password"];
 
