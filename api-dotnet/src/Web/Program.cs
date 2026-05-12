@@ -1,8 +1,11 @@
 using Application.Features.Auth;
 using Application.Features.Scans;
+using Application.Features.Scans.ProcessScanResult;
 using Application.Interfaces;
+using Application.Interfaces.Services;
 using Domain.Entities;
 using FluentValidation;
+using Infrastructure.BackgroundServices;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Redis;
@@ -160,6 +163,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     return ConnectionMultiplexer.Connect(config);
 });
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
+builder.Services.AddSingleton<IRedisConsumer, RedisConsumer>();
 
 // Application services
 builder.Services.AddHttpContextAccessor();
@@ -173,6 +177,9 @@ builder.Services.AddScoped<IScanRepository, ScanRepository>();
 builder.Services.AddScoped<IDomainRepository, DomainRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IProcessScanResultHandler, ProcessScanResultHandler>();
+builder.Services.AddSingleton<INotificationDispatcher, NotificationDispatcherStub>();
+builder.Services.AddHostedService<ScanResultListenerService>();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(

@@ -1,10 +1,13 @@
 using Application.Features.Scans;
 using Application.Features.Scans.GetScanHistory;
+using Application.Features.Scans.GetScanDetail;
 using Application.Interfaces;
 using Domain.Common;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.Extensions;
+using System.Security.Claims;
 
 namespace Web.Controllers;
 
@@ -43,6 +46,25 @@ public class ScansController : ControllerBase
     {
         var query = new GetScanHistoryQuery(domainId, _currentUser.UserId, page, pageSize);
         var result = await _mediator.Send(query);
+        return result.ToHttpResponse(this);
+    }
+
+    /// <summary>
+    /// Get full scan detail including all findings.
+    /// Poll this after triggering a scan to track status.
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    public async Task<ActionResult<Result<ScanDetailResponse>>> GetDetail(Guid id)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var query = new GetScanDetailQuery(id, userId);
+        var result = await _mediator.Send(query);
+
+        // Return 202 Accepted if scan is still queued or running (frontend should keep polling)
+        if (result.IsSuccess && (result.Value!.Status == "Queued" || result.Value!.Status == "Running"))
+            return Accepted(result);
+
         return result.ToHttpResponse(this);
     }
 }
