@@ -1,0 +1,36 @@
+name: Hotfix Sync — Backport to staging
+
+on:
+  push:
+    branches:
+      - "hotfix/**"
+
+jobs:
+  open-backport-pr:
+    name: Open backport PR to staging
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create backport PR to staging
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: staging
+          branch: backport/${{ github.ref_name }}-to-staging
+          title: "[Backport] ${{ github.ref_name }} → staging"
+          body: |
+            This is an automated backport PR for hotfix branch `${{ github.ref_name }}`.
+
+            **⚠️ This PR must be reviewed and merged to keep `staging` in sync with `prod`.**
+
+            Original hotfix branch: `${{ github.ref_name }}`
+            Triggered by commit: `${{ github.sha }}`
+          labels: hotfix, backport

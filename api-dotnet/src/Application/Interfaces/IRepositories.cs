@@ -16,5 +16,5 @@ public interface IRefreshTokenRepository
     Task SaveChanges(CancellationToken ct = default);
     Task<RefreshToken?> GetByToken(string rawToken, CancellationToken ct = default);
     Task<IEnumerable<RefreshToken>> GetActiveByUserId(Guid userId, CancellationToken ct = default);
-    
+
 }

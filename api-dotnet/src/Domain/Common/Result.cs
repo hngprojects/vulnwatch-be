@@ -20,11 +20,11 @@ public sealed class Result<T>
     /// <summary>The failure details when <see cref="IsSuccess"/> is <c>false</c>; otherwise <c>null</c>.</summary>
     public Error? Error { get; }
 
-    private Result(T value)     { IsSuccess = true;  Value = value;   Error = null; }
+    private Result(T value) { IsSuccess = true; Value = value; Error = null; }
     private Result(Error error) { IsSuccess = false; Value = default; Error = error; }
 
     /// <summary>Creates a successful result wrapping <paramref name="value"/>.</summary>
-    public static Result<T> Success(T value)     => new(value);
+    public static Result<T> Success(T value) => new(value);
 
     /// <summary>
     /// Creates a failed result. Use the <see cref="Error"/> static helpers to build the error,

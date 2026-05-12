@@ -8,7 +8,7 @@ public record TokenClaims(Guid UserId, string Email);
 public interface IJwtService
 {
     string GenerateToken(User user);
- 
+
     Result<TokenClaims> ValidateAccessToken(string token);
 
     string GenerateRefreshTokenString();

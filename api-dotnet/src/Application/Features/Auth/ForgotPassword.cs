@@ -1,3 +1,4 @@
+using System.Net;
 using Application.Features.Auth.DTOs;
 using Application.Interfaces;
 using Domain.Common;
@@ -5,6 +6,7 @@ using Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Features.Auth;
 
@@ -15,12 +17,15 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
     private readonly UserManager<User> _userManager;
     private readonly IEmailService _email;
     private readonly IConfiguration _config;
+    private readonly ILogger<ForgotPasswordHandler> _logger;
 
-    public ForgotPasswordHandler(UserManager<User> userManager, IEmailService email, IConfiguration config)
+
+    public ForgotPasswordHandler(UserManager<User> userManager, IEmailService email, IConfiguration config, ILogger<ForgotPasswordHandler> logger)
     {
         _userManager = userManager;
         _email = email;
         _config = config;
+        _logger = logger;
     }
 
     public async Task<Result<MessageResponse>> Handle(ForgotPasswordCommand cmd, CancellationToken ct)
@@ -33,8 +38,12 @@ public class ForgotPasswordHandler : IRequestHandler<ForgotPasswordCommand, Resu
             return Result<MessageResponse>.Success(MessageResponse.Create(message));
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
         var frontendUrl = _config["FrontendUrl:path"];
-        var resetLink = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={Uri.EscapeDataString(token)}";
+        var resetLink = $"{frontendUrl}/reset-password?email={Uri.EscapeDataString(cmd.Email)}&token={encodedToken}";
+
+        _logger.LogInformation("VERIFICATION LINK: {link}", resetLink);
 
         await _email.SendAsync(cmd.Email, "Reset your password", $"Click here to reset your password: {resetLink}");
 
