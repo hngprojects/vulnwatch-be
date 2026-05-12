@@ -27,7 +27,6 @@ public class ScannerFilter {
      *   <li>DnsScanner (DOMAIN) → included</li>
      *   <li>SslScanner (DOMAIN) → included</li>
      *   <li>DependencyScanner (REPOSITORY) → included</li>
-     *   <li>All others → excluded</li>
      * </ul>
      *
      * @param allScanners All available scanners (injected by Spring)
@@ -43,7 +42,8 @@ public class ScannerFilter {
         Set<TargetType> targetTypeSet = Set.copyOf(jobTargetTypes);
 
         List<Scanner> matchingScanners = allScanners.stream()
-                .filter(scanner -> targetTypeSet.contains(scanner.getSupportedTargetType()))
+                .filter(scanner -> targetTypeSet
+                        .contains(scanner.getTargetType()))
                 .toList();
 
         log.info("Filtered {} scanners matching target types: {}", matchingScanners.size(), jobTargetTypes);
@@ -74,7 +74,8 @@ public class ScannerFilter {
         }
 
         List<Scanner> matchingScanners = allScanners.stream()
-                .filter(scanner -> scanner.getSupportedTargetType() == targetType)
+                .filter(scanner -> scanner
+                        .getTargetType() == targetType)
                 .toList();
 
         log.debug("Filtered {} scanners for exact target type: {}", matchingScanners.size(), targetType);
@@ -87,7 +88,7 @@ public class ScannerFilter {
      */
     public Set<TargetType> getSupportedTargetTypes(List<Scanner> scanners) {
         return scanners.stream()
-                .map(Scanner::getSupportedTargetType)
+                .map(Scanner::getTargetType)
                 .collect(Collectors.toSet());
     }
 }
