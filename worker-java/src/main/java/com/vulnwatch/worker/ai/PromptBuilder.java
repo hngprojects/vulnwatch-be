@@ -9,14 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-/**
- * Builds the AI prompt by converting raw scan data to JSON and injecting role instructions.
- *
- * <p>This component has NO external dependencies (no Redis, no Database, no HTTP).
- * It is purely a data transformer, making it easily unit testable.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,32 +17,32 @@ public class PromptBuilder {
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Builds the complete user instruction for OpenAI.
-     *
-     * @param aggregatedData Raw results from all scanners
-     * @return Formatted prompt string with role instruction and scan data
-     */
     public String buildPrompt(AggregatedScanData aggregatedData) {
         String scanDataJson = convertScanDataToJson(aggregatedData);
         return String.format(PROMPT_TEMPLATE, scanDataJson);
     }
 
-    /**
-     * Converts aggregated scan results to JSON format for AI consumption.
-     * Groups results by surface type (DNS, SSL, HTTP_HEADERS, etc.)
-     *
-     * @param aggregatedData Raw results from all scanners
-     * @return JSON string representation of scan data
-     */
     public String convertScanDataToJson(AggregatedScanData aggregatedData) {
-        Map<String, Object> scanResults = aggregatedData.getSuccessfulResults().stream()
-                .collect(Collectors.toMap(
-                        r -> r.getSurface().name().toLowerCase(),
-                        ScanResult::getRawData,
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
+
+        Map<String, Object> scanResults = new LinkedHashMap<>();
+
+        if (aggregatedData.getScanJob() != null && aggregatedData.getScanJob().getDomain() != null) {
+            Map<String, String> metadata = new LinkedHashMap<>();
+            metadata.put("domain", aggregatedData.getScanJob().getDomain());
+            metadata.put("scan_id", aggregatedData.getScanId().toString());
+            scanResults.put("_metadata", metadata);
+        }
+
+        for (ScanResult result : aggregatedData.getSuccessfulResults()) {
+            String key = result.getSurface().name().toLowerCase();
+            Map<String, Object> rawData = result.getRawData();
+
+            if (rawData == null) {
+                log.warn("Null rawData for scanner: {}, using empty map", result.getScannerName());
+                rawData = new LinkedHashMap<>();
+            }
+            scanResults.put(key, rawData);
+        }
 
         try {
             return objectMapper.writeValueAsString(scanResults);
@@ -59,10 +52,6 @@ public class PromptBuilder {
         }
     }
 
-    /**
-     * System prompt template instructing AI to act as security expert.
-     * The %s placeholder is replaced with the actual scan data JSON.
-     */
     private static final String PROMPT_TEMPLATE = """
             You are VulnWatch AI, a world-class security expert for developers and business owners.
 
