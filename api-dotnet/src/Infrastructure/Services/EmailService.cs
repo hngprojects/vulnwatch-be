@@ -39,7 +39,13 @@ public class EmailService : IEmailService
 
         try
         {
-            await client.SendMailAsync(new MailMessage(credentials.Username, to, subject, body));
+            var mail = new MailMessage(credentials.Username, to, subject, body)
+            {
+                IsBodyHtml = true
+            };
+
+            await client.SendMailAsync(mail);
+
             _logger.LogInformation("Email sent to {Recipient} with subject '{Subject}'.", to, subject);
             return;
         }
