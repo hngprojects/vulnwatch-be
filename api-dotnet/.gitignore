@@ -389,4 +389,4 @@ appsettings.*.json
 #env files
 .envrc
 
-/api-dotnet/src/Web/appsettings*.json
+/src/Web/appsettings*.json
