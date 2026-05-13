@@ -1,17 +1,17 @@
 package com.vulnwatch.worker.models.ai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
  * AI Response POJO - matches the JSON structure returned by OpenAI.
  *
  * <p>Example JSON from OpenAI:
+ *
  * <pre>
  * {
  *   "security_score": 72,
@@ -34,8 +34,8 @@ import java.util.List;
 @AllArgsConstructor
 public class AiResponse {
 
-    @JsonProperty("security_score")
-    private int securityScore;
+  @JsonProperty("security_score")
+  private int securityScore;
 
-    private List<AiFinding> findings;
+  private List<AiFinding> findings;
 }
