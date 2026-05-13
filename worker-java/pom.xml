@@ -141,6 +141,11 @@
 			<version>2.5.0</version>
 		</dependency>
 		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.12</version>
+		</dependency>
+		<dependency>
 			<groupId>com.restfb</groupId>
 			<artifactId>restfb</artifactId>
 			<version>2024.9.0</version>
@@ -188,6 +193,12 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>5.2.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
