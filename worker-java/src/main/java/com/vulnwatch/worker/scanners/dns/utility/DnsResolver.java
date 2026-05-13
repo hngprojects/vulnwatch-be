@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
@@ -19,7 +18,6 @@ public class DnsResolver {
 
   private final AsnLookupService asnLookupService;
   private final RuleEngine ruleEngine;
-
 
   public CompletableFuture<ScanContext> resolveRecords(String domain) throws IOException {
 

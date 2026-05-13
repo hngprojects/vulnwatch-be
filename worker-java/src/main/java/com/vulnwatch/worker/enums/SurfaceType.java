@@ -19,33 +19,21 @@ public enum SurfaceType {
   DEPENDENCY,
 
   @Schema(description = "Hardcoded secrets and credentials")
-  SECRETS;
+  SECRETS,
 
-    @Schema(description = "Hardcoded secrets and credentials")
-    SECRETS,
+  @Schema(description = "Fallback for AI failure")
+  INFO;
 
-    @Schema(description = "Fallback for AI failure")
-    INFO;
-
-    /**
-     * Converts a string to SurfaceType regardless of case.
-     *
-     * @param value The string value (e.g., "dns", "Dns", "DNS")
-     * @return The matching SurfaceType
-     * @throws InvalidSurfaceTypeException if no match is found
-     */
-    public static SurfaceType fromString(String value) throws InvalidSurfaceTypeException {
-        if (value == null) {
-            throw new InvalidSurfaceTypeException("Surface type cannot be null");
-        }
-
-        for (SurfaceType type : SurfaceType.values()) {
-            if (type.name().equalsIgnoreCase(value.trim())) {
-                return type;
-            }
-        }
-
-        throw new InvalidSurfaceTypeException("Unknown surface type: " + value);
+  /**
+   * Converts a string to SurfaceType regardless of case.
+   *
+   * @param value The string value (e.g., "dns", "Dns", "DNS")
+   * @return The matching SurfaceType
+   * @throws InvalidSurfaceTypeException if no match is found
+   */
+  public static SurfaceType fromString(String value) throws InvalidSurfaceTypeException {
+    if (value == null) {
+      throw new InvalidSurfaceTypeException("Surface type cannot be null");
     }
 
     for (SurfaceType type : SurfaceType.values()) {

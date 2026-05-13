@@ -11,11 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import lombok.Data;
-
 /**
  * ScanJob model - matches the JSON payload from C# API.
  *
@@ -66,8 +61,7 @@ public class ScanJob {
     return scanTypes != null && scanTypes.contains(TargetType.DOMAIN);
   }
 
-    public boolean isRepositoryScan() {
-        return scanTypes != null && scanTypes.contains(TargetType.REPOSITORY);
-    }
-
+  public boolean isRepositoryScan() {
+    return scanTypes != null && scanTypes.contains(TargetType.REPOSITORY);
+  }
 }
