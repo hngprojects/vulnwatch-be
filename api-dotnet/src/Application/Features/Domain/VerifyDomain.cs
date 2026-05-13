@@ -12,7 +12,7 @@ namespace Application.Features.Domain;
 public record VerifyDomainCommand(Guid DomainId) : IRequest<Result<VerifyDomainResponse>>;
 
 public class VerifyDomainHandler(
-    IScannedDomainRepository domains,
+    IDomainRepository domains,
     ICurrentUser currentUser,
     IDnsResolver dnsResolver,
        ILogger<VerifyDomainHandler> logger
