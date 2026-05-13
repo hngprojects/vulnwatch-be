@@ -1,34 +1,31 @@
 package com.vulnwatch.worker.models.ai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-/**
- * Individual finding from AI response.
- */
+/** Individual finding from AI response. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AiFinding {
 
-    private String severity;
+  private String severity;
 
-    private String surface;
+  private String surface;
 
-    private String title;
+  private String title;
 
-    @JsonProperty("plain_english_explanation")
-    private String plainEnglishExplanation;
+  @JsonProperty("plain_english_explanation")
+  private String plainEnglishExplanation;
 
-    @JsonProperty("technical_details")
-    private String technicalDetails;
+  @JsonProperty("technical_details")
+  private String technicalDetails;
 
-    @JsonProperty("remediation_steps")
-    private List<String> remediationSteps;
+  @JsonProperty("remediation_steps")
+  private List<String> remediationSteps;
 }

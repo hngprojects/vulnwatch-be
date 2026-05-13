@@ -1,2 +1,1 @@
-public class WorkerApplicationTests {
-}
+public class WorkerApplicationTests {}

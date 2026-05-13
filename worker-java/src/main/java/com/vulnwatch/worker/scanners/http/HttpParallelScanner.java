@@ -26,16 +26,17 @@ public class HttpParallelScanner {
 
   public ScanResponse scan(ScanJob job) {
     CompletableFuture<List<FindingResponse>> headerTask =
-            CompletableFuture.supplyAsync(() -> safe(headerCheck.scan(job.getDomain())), executor);
+        CompletableFuture.supplyAsync(() -> safe(headerCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> exposureTask =
-            CompletableFuture.supplyAsync(() -> safe(exposureCheck.scan(job.getDomain())), executor);
+        CompletableFuture.supplyAsync(() -> safe(exposureCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> adminTask =
-            CompletableFuture.supplyAsync(() -> safe(adminPanelCheck.scan(job.getDomain())), executor);
+        CompletableFuture.supplyAsync(() -> safe(adminPanelCheck.scan(job.getDomain())), executor);
 
     CompletableFuture<List<FindingResponse>> directoryTask =
-            CompletableFuture.supplyAsync(() -> safe(directoryListingCheck.scan(job.getDomain())), executor);
+        CompletableFuture.supplyAsync(
+            () -> safe(directoryListingCheck.scan(job.getDomain())), executor);
 
     CompletableFuture.allOf(headerTask, exposureTask, adminTask, directoryTask).join();
 
