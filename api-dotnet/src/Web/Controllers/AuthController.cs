@@ -16,9 +16,9 @@ public class AuthController : ControllerBase
     public AuthController(IMediator mediator) => _mediator = mediator;
 
     [HttpPost("register")]
-    public async Task<ActionResult<Result<AuthResponse>>> Register(RegisterRequest request)
+    public async Task<ActionResult<Result<MessageResponse>>> Register(RegisterRequest request)
     {
-        var result = await _mediator.Send(new RegisterCommand(request.Email, request.Password));
+        var result = await _mediator.Send(new RegisterCommand(request.Email, request.Password, request.FirstName, request.LastName));
         return result.ToHttpResponse(this);
     }
 
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("verify")]
-    public async Task<ActionResult<Result<AuthResponse>>> VerifyToken(
+    public async Task<ActionResult<Result<MessageResponse>>> VerifyToken(
         [FromQuery] string userId,
         [FromQuery] string token,
         CancellationToken ct)

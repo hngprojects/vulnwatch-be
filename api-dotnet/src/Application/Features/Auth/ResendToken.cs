@@ -34,7 +34,7 @@ public class ResendVerificationHandler(
             return Result<MessageResponse>.Failure(Error.Conflict("Email is already verified."));
 
         var verificationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        
+
         var encodedToken = WebUtility.UrlEncode(verificationToken);
         var verificationLink = $"{config["FrontendUrl:Verify"]!}/?userId={user.Id}&token={encodedToken}";
 
