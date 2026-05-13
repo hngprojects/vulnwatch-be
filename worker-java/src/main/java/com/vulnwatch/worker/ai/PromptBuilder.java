@@ -3,56 +3,56 @@ package com.vulnwatch.worker.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vulnwatch.worker.models.AggregatedScanData;
 import com.vulnwatch.worker.models.ScanResult;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PromptBuilder {
 
-    private final ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
-    public String buildPrompt(AggregatedScanData aggregatedData) {
-        String scanDataJson = convertScanDataToJson(aggregatedData);
-        return String.format(PROMPT_TEMPLATE, scanDataJson);
+  public String buildPrompt(AggregatedScanData aggregatedData) {
+    String scanDataJson = convertScanDataToJson(aggregatedData);
+    return String.format(PROMPT_TEMPLATE, scanDataJson);
+  }
+
+  public String convertScanDataToJson(AggregatedScanData aggregatedData) {
+
+    Map<String, Object> scanResults = new LinkedHashMap<>();
+
+    if (aggregatedData.getScanJob() != null && aggregatedData.getScanJob().getDomain() != null) {
+      Map<String, String> metadata = new LinkedHashMap<>();
+      metadata.put("domain", aggregatedData.getScanJob().getDomain());
+      metadata.put("scan_id", aggregatedData.getScanId().toString());
+      scanResults.put("_metadata", metadata);
     }
 
-    public String convertScanDataToJson(AggregatedScanData aggregatedData) {
+    for (ScanResult result : aggregatedData.getSuccessfulResults()) {
+      String key = result.getSurface().name().toLowerCase();
+      Map<String, Object> rawData = result.getRawData();
 
-        Map<String, Object> scanResults = new LinkedHashMap<>();
-
-        if (aggregatedData.getScanJob() != null && aggregatedData.getScanJob().getDomain() != null) {
-            Map<String, String> metadata = new LinkedHashMap<>();
-            metadata.put("domain", aggregatedData.getScanJob().getDomain());
-            metadata.put("scan_id", aggregatedData.getScanId().toString());
-            scanResults.put("_metadata", metadata);
-        }
-
-        for (ScanResult result : aggregatedData.getSuccessfulResults()) {
-            String key = result.getSurface().name().toLowerCase();
-            Map<String, Object> rawData = result.getRawData();
-
-            if (rawData == null) {
-                log.warn("Null rawData for scanner: {}, using empty map", result.getScannerName());
-                rawData = new LinkedHashMap<>();
-            }
-            scanResults.put(key, rawData);
-        }
-
-        try {
-            return objectMapper.writeValueAsString(scanResults);
-        } catch (Exception e) {
-            log.error("Failed to convert scan data to JSON", e);
-            return "{}";
-        }
+      if (rawData == null) {
+        log.warn("Null rawData for scanner: {}, using empty map", result.getScannerName());
+        rawData = new LinkedHashMap<>();
+      }
+      scanResults.put(key, rawData);
     }
 
-    private static final String PROMPT_TEMPLATE = """
+    try {
+      return objectMapper.writeValueAsString(scanResults);
+    } catch (Exception e) {
+      log.error("Failed to convert scan data to JSON", e);
+      return "{}";
+    }
+  }
+
+  private static final String PROMPT_TEMPLATE =
+      """
             You are VulnWatch AI, a world-class security expert for developers and business owners.
 
             ## YOUR ROLE

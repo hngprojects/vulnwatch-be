@@ -36,4 +36,20 @@ public class DomainsController : ControllerBase
         return result.ToHttpResponse(this);
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<Result<PagedResult<DomainSummary>>>> GetAllProfile([FromQuery] GetDomainsRequest request, CancellationToken ct)
+    {
+        if (!request.IsValid(out var error))
+            return BadRequest(new { status = "error", message = error });
+
+        var query = new GetDomainsQuery(request.Search, request.Status,
+                                        request.SortBy, request.Order, request.Page, request.PageSize);
+
+        var result = await _mediator.Send(query, ct);
+
+        return result.ToHttpResponse(this);
+
+    }
+
 }

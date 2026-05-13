@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Features.Auth;
 
-public record RegisterCommand(string Email, string Password) : IRequest<Result<AuthResponse>>;
+public record RegisterCommand(string Email, string Password, string? FirstName = null, string? LastName = null) : IRequest<Result<MessageResponse>>;
 
-public class RegisterHandler : IRequestHandler<RegisterCommand, Result<AuthResponse>>
+public class RegisterHandler : IRequestHandler<RegisterCommand, Result<MessageResponse>>
 {
     private readonly UserManager<User> _userManager;
     private readonly IJwtService _jwt;
@@ -31,32 +31,35 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, Result<AuthRespo
         _logger = logger;
     }
 
-    public async Task<Result<AuthResponse>> Handle(RegisterCommand cmd, CancellationToken ct)
+    public async Task<Result<MessageResponse>> Handle(RegisterCommand cmd, CancellationToken ct)
     {
         var existing = await _userManager.FindByEmailAsync(cmd.Email);
         if (existing is not null)
-            return Result<AuthResponse>.Failure(Error.Conflict("Email is already registered."));
+            return Result<MessageResponse>.Failure(Error.Conflict("Email is already registered."));
 
-        var user = User.Create(cmd.Email);
+        var user = User.Create(cmd.Email, cmd.FirstName, cmd.LastName);
         var result = await _userManager.CreateAsync(user, cmd.Password);
 
         if (!result.Succeeded)
-            return Result<AuthResponse>.Failure(Error.Validation(result.Errors.First().Description));
+            return Result<MessageResponse>.Failure(Error.Validation(result.Errors.First().Description));
 
         var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
         var encodedToken = WebUtility.UrlEncode(verificationToken);
 
-        var verificationLink = $"{_config["BaseUrl:Path"]!}/api/Auth/verify-token?userId={user.Id!}&token={encodedToken}";
+        var verificationLink = $"{_config["FrontendUrl:Verify"]}/?userId={user.Id}&token={encodedToken}";
 
         _logger.LogInformation("VERIFICATION LINK: {link}", verificationLink);
 
-        var body = BuildVerificationEmailBody(user.UserName!, verificationLink);
+        var displayName = string.IsNullOrWhiteSpace(user.FirstName)
+            ? user.Email!
+            : user.FirstName;
+
+        var body = BuildVerificationEmailBody(displayName, verificationLink);
 
         await _email.SendAsync(user.Email!, "Verify Your Email", body);
 
-        var token = _jwt.GenerateToken(user);
-        return Result<AuthResponse>.Success(AuthResponse.Create(token, user));
+        return Result<MessageResponse>.Success(MessageResponse.Create("Registration successful. Verification link has been sent to your email."));
     }
 
     private string BuildVerificationEmailBody(string userName, string verificationLink)

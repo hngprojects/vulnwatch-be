@@ -4,15 +4,19 @@ namespace Domain.Entities;
 
 public class User : IdentityUser<Guid>
 {
+    public string? FirstName { get; private set; }
+    public string? LastName { get; private set; }
     public string? GoogleId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    public static User Create(string email) => new()
+    public static User Create(string email, string? firstName = null, string? lastName = null) => new()
     {
         Id = Guid.NewGuid(),
         Email = email,
         UserName = email,
+        FirstName = firstName,
+        LastName = lastName,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };

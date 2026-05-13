@@ -269,7 +269,7 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("IdempotencyKey")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("MonitoredRepositoryId")
+                    b.Property<Guid?>("RepositoryId")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("SecurityScore")
@@ -299,7 +299,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
 
-                    b.HasIndex("MonitoredRepositoryId");
+                    b.HasIndex("RepositoryId");
 
                     b.HasIndex("UserId");
 
@@ -362,8 +362,16 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("GoogleId")
                         .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -673,9 +681,10 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("DomainId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("Domain.Entities.MonitoredRepository", null)
+                    b.HasOne("Domain.Entities.MonitoredRepository", "Repository")
                         .WithMany("Scans")
-                        .HasForeignKey("MonitoredRepositoryId");
+                        .HasForeignKey("RepositoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()
@@ -684,6 +693,8 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Domain");
+
+                    b.Navigation("Repository");
 
                     b.Navigation("User");
                 });
