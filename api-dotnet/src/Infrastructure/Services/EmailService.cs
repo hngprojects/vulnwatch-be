@@ -39,10 +39,15 @@ public class EmailService : IEmailService
 
         try
         {
-            var mail = new MailMessage(credentials.Username, to, subject, body)
+            var mail = new MailMessage
             {
+                From = new MailAddress(credentials.Username, credentials.FromName),
+                To = { new MailAddress(to) },
+                Subject = subject,
+                Body = body,
                 IsBodyHtml = true
             };
+
 
             await client.SendMailAsync(mail);
 
@@ -62,14 +67,18 @@ public class EmailService : IEmailService
     }
 }
 
-internal sealed record SmtpCredentials(string Host, int Port, string Username, string Password)
+internal sealed record SmtpCredentials(string FromName, string Host, int Port, string Username, string Password)
 {
     public static SmtpCredentials Load(IConfiguration config)
     {
+        var fromName = config["SmtpCredentials:FromName"];
         var host = config["SmtpCredentials:Host"];
         var portRaw = config["SmtpCredentials:Port"];
         var username = config["SmtpCredentials:Username"];
         var password = config["SmtpCredentials:Password"];
+
+        if (string.IsNullOrWhiteSpace(fromName))
+            throw new InvalidOperationException("SMTP host is not configured.");
 
         if (string.IsNullOrWhiteSpace(host))
             throw new InvalidOperationException("SMTP host is not configured.");
@@ -83,6 +92,6 @@ internal sealed record SmtpCredentials(string Host, int Port, string Username, s
         if (string.IsNullOrWhiteSpace(password))
             throw new InvalidOperationException("SMTP password is not configured.");
 
-        return new(host, port, username, password);
+        return new(fromName, host, port, username, password);
     }
 }

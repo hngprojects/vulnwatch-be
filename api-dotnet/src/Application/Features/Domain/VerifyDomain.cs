@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Domain.Common;
 using Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Features.Domain;
 
@@ -13,7 +14,8 @@ public record VerifyDomainCommand(Guid DomainId) : IRequest<Result<VerifyDomainR
 public class VerifyDomainHandler(
     IScannedDomainRepository domains,
     ICurrentUser currentUser,
-    IDnsResolver dnsResolver
+    IDnsResolver dnsResolver,
+       ILogger<VerifyDomainHandler> logger
 ) : IRequestHandler<VerifyDomainCommand, Result<VerifyDomainResponse>>
 {
     public async Task<Result<VerifyDomainResponse>> Handle(
@@ -28,6 +30,14 @@ public class VerifyDomainHandler(
 
         var txtHost = $"_vulnwatch-verify.{record.DomainName}";
         var txtValues = await dnsResolver.GetTxtRecords(txtHost, ct);
+
+        foreach (var value in txtValues)
+        {
+            logger.LogInformation(
+                "Resolved TXT record for {Host}: {Value}",
+                txtHost,
+                value);
+        }
 
         var expectedHash = record.VerificationToken;
         var matchFound = txtValues.Any(v =>
