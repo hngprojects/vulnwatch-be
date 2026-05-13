@@ -388,3 +388,5 @@ appsettings.*.json
 
 #env files
 .envrc
+
+/src/Web/appsettings*.json
