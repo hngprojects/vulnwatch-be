@@ -25,7 +25,7 @@ public class RedisService : IRedisService
 
         await db.ListLeftPushAsync(queueKey, payload);
 
-        _logger.LogInformation("Scan job published for domain {DomainId}, scan {ScanId}", 
+        _logger.LogInformation("Scan job published for domain {DomainId}, scan {ScanId}",
             job.DomainId, job.ScanId);
     }
 
