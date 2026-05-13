@@ -95,10 +95,16 @@ jobs:
             cp -r ~/backend-build-artifacts/worker-java/target/* $JAVA_DIR/
 
             # Restart services
-            pm2 restart $API_NAME || pm2 start $START_SCRIPT --name "$API_NAME" --cwd $(dirname $START_SCRIPT)
-            pm2 restart $WORKER_NAME || pm2 start "java -jar $JAVA_DIR/*.jar" --name "$WORKER_NAME"
+            pm2 restart $API_NAME 2>/dev/null || pm2 start $START_SCRIPT --name "$API_NAME" --cwd $(dirname $START_SCRIPT)
+            JAR_FILE=$(ls $JAVA_DIR/*.jar | grep -v sources | head -1)
+            pm2 restart $WORKER_NAME 2>/dev/null || pm2 start "java -jar $JAR_FILE" --name "$WORKER_NAME"
             pm2 save
 
             # Cleanup
             rm -rf ~/backend-build-artifacts/dotnet-publish
             rm -rf ~/backend-build-artifacts/worker-java
+
+      - name: Clean up local artifacts
+        run: |
+          rm -f dotnet-build.tar.gz
+          rm -f java-build.tar.gz
