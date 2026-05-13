@@ -157,7 +157,7 @@ var redisConfig = builder.Configuration.GetValue<string>("Redis:Configuration") 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var config = ConfigurationOptions.Parse(redisConfig);
-    config.AbortOnConnectFail = false;    
+    config.AbortOnConnectFail = false;
     return ConnectionMultiplexer.Connect(config);
 });
 builder.Services.AddSingleton<IRedisProducer, RedisProducer>();
