@@ -174,7 +174,19 @@ builder.Services.AddScoped<IScannedDomainRepository, ScannedDomainRepository>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddSingleton<ILookupClient>(new LookupClient());
+builder.Services.AddSingleton<LookupClient>(_ =>
+                new LookupClient(
+                    new LookupClientOptions(
+                        NameServer.GooglePublicDns,       // 8.8.8.8
+                        NameServer.GooglePublicDns2       // 8.8.4.4
+                    )
+                    {
+                        UseCache = false,                 // don't cache during testing
+                        Retries  = 3,
+                        Timeout  = TimeSpan.FromSeconds(5)
+                    }
+                )
+            );
 builder.Services.AddScoped<IDnsResolver, DnsResolver>();
 
 builder.Services.AddHealthChecks()

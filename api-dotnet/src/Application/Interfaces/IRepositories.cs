@@ -2,6 +2,7 @@
 
 
 
+using Application.Features.Domain;
 using Domain.Entities;
 
 namespace Application.Interfaces;
@@ -26,6 +27,7 @@ public interface IScannedDomainRepository : IRepository<ScannedDomain>
 {
     Task<ScannedDomain?> FindActive(string domain, CancellationToken ct);
     Task<int> CountPending(Guid userId, CancellationToken ct);
-
     Task<ScannedDomain?> FindPendingById(Guid domainId, Guid userId, CancellationToken ct);
+    public Task<ScannedDomain?> GetByNameAndUser(string domainName, Guid userId, CancellationToken ct);
+    Task<(IReadOnlyList<ScannedDomain>, int)> GetPaged(DomainFilter q, CancellationToken ct = default);
 }

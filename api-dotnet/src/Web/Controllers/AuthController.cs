@@ -29,6 +29,13 @@ public class AuthController : ControllerBase
         return result.ToHttpResponse(this);
     }
 
+    [HttpPost("resend")]
+    public async Task<ActionResult<Result<MessageResponse>>> ResendVerification(ResendTokenRequest request)
+    {
+        var result = await _mediator.Send(new ResendVerificationCommand(request.Email));
+        return result.ToHttpResponse(this);
+    }
+
     [HttpPost("google")]
     public async Task<ActionResult<Result<AuthResponse>>> GoogleLogin(GoogleLoginRequest request)
     {

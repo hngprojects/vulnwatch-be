@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Cryptography;
 using Application.Features.Auth.DTOs;
 using Application.Features.Domain.DTOs;
 using Application.Interfaces;
@@ -32,24 +33,33 @@ public class RegisterDomainHandler : IRequestHandler<RegisterDomainCommand, Resu
     {
         var domain = cmd.Domain.ToLowerInvariant();
 
-        var existing = await _domains.FindActive(domain, ct);
+        if (!IsValidDomain(domain))
+            return Result<RegisterDomainResponse>.Failure(Error.Validation("Invalid domain name"));
 
-        if (existing is not null)
-            return Result<RegisterDomainResponse>.Failure(Error.Conflict($"Domain '{domain}' is already registered."));
+        var userId = _currentUser.UserId;
 
         var unverifiedCount = await _domains.CountPending(_currentUser.UserId, ct);
         if (unverifiedCount >= 20)
             return Result<RegisterDomainResponse>.Failure(Error.RateLimited("You have reached the maximum of 20 pending domains. Verify or remove existing ones before adding more."));
 
-        var (rawToken, tokenHash) = _token.Generate();
+        var existing = await _domains.GetByNameAndUser(domain, userId, ct);
 
+        if (existing is not null)
+            return Result<RegisterDomainResponse>.Failure(Error.RateLimited("Domain already added"));
+
+        var (rawToken, tokenHash) = _token.Generate();
+        
         var record = ScannedDomain.Create(
             _currentUser.UserId,
             domain,
             tokenHash);
 
+
         await _domains.AddAsync(record, ct);
         await _domains.SaveChangesAsync(ct);
         return Result<RegisterDomainResponse>.Success(RegisterDomainResponse.Create(rawToken, record));
     }
+
+    private static bool IsValidDomain(string name) =>
+          Uri.CheckHostName(name) == UriHostNameType.Dns;
 }
