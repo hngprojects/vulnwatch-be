@@ -8,6 +8,7 @@ public class Scan : EntityBase
     public Guid IdempotencyKey { get; private set; }
     public ScanTargetType TargetType { get; private set; }
     public Guid? DomainId { get; private set; }
+    public Guid? RepoId { get; private set; }
     public ScanStatus Status { get; private set; }
     public int? SecurityScore { get; private set; }
     public DateTime? StartedAt { get; private set; }
