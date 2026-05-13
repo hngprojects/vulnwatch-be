@@ -30,6 +30,14 @@ public class VulnWatchDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
         builder.Entity<User>(e =>
         {
             // Identity already handles Email uniqueness; only add custom index
+            e.Property(x => x.FirstName)
+               .HasMaxLength(100)
+               .IsRequired(false);
+
+            e.Property(x => x.LastName)
+                   .HasMaxLength(100)
+                   .IsRequired(false);
+
             e.HasIndex(u => u.GoogleId).IsUnique().HasFilter("\"GoogleId\" IS NOT NULL");
         });
 
@@ -71,6 +79,10 @@ public class VulnWatchDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gu
              .WithMany(d => d.Scans)
              .HasForeignKey(s => s.DomainId)
              .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Repository)
+                .WithMany(r => r.Scans)
+                .HasForeignKey(s => s.RepositoryId)
+                .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.User)
              .WithMany()
              .HasForeignKey(s => s.UserId)

@@ -182,8 +182,8 @@ builder.Services.AddSingleton<LookupClient>(_ =>
                     )
                     {
                         UseCache = false,                 // don't cache during testing
-                        Retries  = 3,
-                        Timeout  = TimeSpan.FromSeconds(5)
+                        Retries = 3,
+                        Timeout = TimeSpan.FromSeconds(5)
                     }
                 )
             );

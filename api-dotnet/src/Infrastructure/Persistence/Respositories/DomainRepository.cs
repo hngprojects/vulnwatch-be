@@ -33,7 +33,7 @@ public sealed class ScannedDomainRepository(VulnWatchDbContext db)
             .FirstOrDefaultAsync(d =>
                 d.DomainName == domainName &&
                 d.UserId == userId, ct);
-                
+
     public async Task<(IReadOnlyList<ScannedDomain>, int)> GetPaged(DomainFilter filter, CancellationToken ct = default)
     {
         var query = Db.Domains.AsNoTracking().AsQueryable();

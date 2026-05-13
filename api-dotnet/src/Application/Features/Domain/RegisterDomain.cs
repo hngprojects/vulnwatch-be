@@ -48,7 +48,7 @@ public class RegisterDomainHandler : IRequestHandler<RegisterDomainCommand, Resu
             return Result<RegisterDomainResponse>.Failure(Error.RateLimited("Domain already added"));
 
         var (rawToken, tokenHash) = _token.Generate();
-        
+
         var record = ScannedDomain.Create(
             _currentUser.UserId,
             domain,
